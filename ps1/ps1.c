@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct singular_pair
+typedef struct singular_value
 {
 	int index;
 	double value;
-} singular_pair;
+} singular_value;
 
 int compare (const void * a, const void * b);
 void eyeify(double** A, int n);
@@ -18,7 +18,7 @@ void rotate(double** A, int n, int p, int q, double** U);
 double sign(double val);
 double A_transpose_A(double** A, int n, int row, int col);
 double max_entry(double** A, int n, int *row, int *col);
-singular_pair* singular_value_accumulate(double** A, int n);
+singular_value* singular_value_accumulate(double** A, int n);
 double** matrix_part_b(int n);
 double** matrix_part_c(int n);
 double** eye(int n);
@@ -119,7 +119,7 @@ void jacobi(double** A, int n, double *s, double **U, double **V)
 		++iters;
 	}
 
-	singular_pair *sigma;
+	singular_value *sigma;
 	sigma = singular_value_accumulate(A, n);
 	for (i = 0; i < n; ++i)
 	{
@@ -132,6 +132,7 @@ void jacobi(double** A, int n, double *s, double **U, double **V)
 		printf("%f  ", sigma[i].value);
 	}
 	mat_free(T, n);
+	free(sigma);
 }
 //----------------------------------------------------------------------------
 double sign(double val)
@@ -278,24 +279,24 @@ double max_entry(double** A, int n, int *row, int *col)
 //----------------------------------------------------------------------------
 int compare (const void * a, const void * b)
 {
-	if ( (*(singular_pair*)a).value >  (*(singular_pair*)b).value )
+	if ( (*(singular_value*)a).value >  (*(singular_value*)b).value )
 	{
 		return -1;
 	}
-	if ( (*(singular_pair*)a).value == (*(singular_pair*)b).value )
+	if ( (*(singular_value*)a).value == (*(singular_value*)b).value )
 	{
 		return 0;
 	}
-	if ( (*(singular_pair*)a).value <  (*(singular_pair*)b).value )
+	if ( (*(singular_value*)a).value <  (*(singular_value*)b).value )
 	{
 		return 1;
 	}
 }
 //----------------------------------------------------------------------------
-singular_pair* singular_value_accumulate(double** A, int n)
+singular_value* singular_value_accumulate(double** A, int n)
 {
-	singular_pair* data;
-	data = malloc(n * sizeof(singular_pair));
+	singular_value* data;
+	data = malloc(n * sizeof(singular_value));
 	int i, j;
 	double sum, sing_val;
 	for (j = 0; j < n; ++j)
@@ -313,7 +314,7 @@ singular_pair* singular_value_accumulate(double** A, int n)
 			A[i][j] /= sing_val;
 		}
 	}
-	qsort(data, n, sizeof(singular_pair), compare);
+	qsort(data, n, sizeof(singular_value), compare);
 	return data;
 }
 
