@@ -58,6 +58,11 @@ int main(int argc, char const *argv[])
 	printf("\ns = \n");
 	vec_print(s, n);
 	printf("\n");
+
+	free(s);
+	mat_free(A, n);
+	mat_free(U, n);
+	mat_free(V, n);
 	return 0;
 }
 //----------------------------------------------------------------------------
