@@ -12,7 +12,6 @@ int compare (const void * a, const void * b);
 void eyeify(double* a, int n);
 void mat_print(double* a, int n);
 void vec_print(double* a, int n);
-// void mat_free(double* a, int n);
 void jacobi(double* a, int n, double *s, double *u, double *v);
 void rotate(double* a, int n, int p, int q, double* u);
 double sign(double val);
@@ -20,8 +19,9 @@ double a_transpose_a(double* a, int n, int row, int col);
 double max_entry(double* a, int n, int *row, int *col);
 singular_value* singular_value_accumulate(double* a, int n);
 double* matrix_part_b(int n);
-double* matrix_part_c(int n);
+double* matrix_part_c(int n); 
 double* eye(int n);
+double off_norm(double* a, int n);
 
 int main(int argc, char const *argv[])
 {
@@ -50,14 +50,18 @@ int main(int argc, char const *argv[])
 		return -1;
 
 	}
+
+
 	jacobi(a, n, s, u, v);
-	printf("\nu = \n");
-	mat_print(u, n);
-	printf("\nv = \n");
-	mat_print(v, n);
-	printf("\ns = \n");
-	vec_print(s, n);
-	printf("\n");
+
+
+	// printf("\nu = \n");
+	// mat_print(u, n);
+	// printf("\nv = \n");
+	// mat_print(v, n);
+	// printf("\ns = \n");
+	// vec_print(s, n);
+	// printf("\n");
 
 	free(s);
 	free(a);
@@ -107,7 +111,7 @@ void rotate(double *a, int n, int p, int q, double* u)
 void jacobi(double* a, int n, double *s, double *u, double *v)
 {
 	int i, j;
-	double epsilon = 1e-10, temp;
+	double epsilon = 1e-12;
 	int iter_max = 1000000, iters = 0;
 
 	double* T;
@@ -118,9 +122,18 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 		rotate(a, n, i, j, T);
 		++iters;
 	}
-
+	if (iters == iter_max)
+	{
+		printf("Jacobi's Method failed to converge. Terminating\n");
+		return;
+	}
+	else
+	{
+		printf("Jacobi's method converged in %i iterations.\n", iters);
+	}
 	singular_value *sigma;
 	sigma = singular_value_accumulate(a, n);
+	printf("Below are the singular values > 1.0E-13:\n");
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
@@ -129,8 +142,17 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 			v[i * n + j] = T[i * n + sigma[j].index];
 		}
 		s[i] = sigma[i].value;
-		printf("%f  ", sigma[i].value);
+		if (sigma[i].value > 1.0e-13)
+		{
+			printf("%g  ", sigma[i].value);
+		}
 	}
+	printf("\nBelow is the column vector associated with the largest singular value (eigenvalue of the implicit Gram Matrix):\n");
+	for (i = 0; i < n; ++i)
+	{
+		printf("%f\n", u[i * n]);
+	}
+
 	free(T);
 	free(sigma);
 }
@@ -205,27 +227,19 @@ void vec_print(double* a, int n)
 		printf("%e  ", a[j]);
 	}
 }
-
-//----------------------------------------------------------------------------
-// void mat_free(double* a, int n)
-// {
-// 	int i;
-// 	for (i = 0; i < n; ++i)
-// 	{
-// 		free(a[i]);
-// 	}
-// 	free(a);
-// }
 //----------------------------------------------------------------------------
 double* matrix_part_b(int n)
 {
 	double* a = malloc(n * n * sizeof(double));
 	int i, j;
+	double i_p_1, j_p_1;
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
-			a[i * n + j] = sqrt(i * i + j * j);
+			i_p_1 = ((double) i) + 1;
+			j_p_1 = ((double) j) + 1;
+			a[i * n + j] = sqrt(i_p_1 * i_p_1 + j_p_1 * j_p_1);
 		}
 	}
 	return a;
@@ -235,11 +249,14 @@ double* matrix_part_c(int n)
 {
 	double* a = malloc(n * n * sizeof(double));
 	int i, j;
+	double i_p_1, j_p_1;
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
-			a[i * n + j] = i * i + j * j;
+			i_p_1 = ((double) i) + 1;
+			j_p_1 = ((double) j) + 1;
+			a[i * n + j] = i_p_1 * i_p_1 + j_p_1 * j_p_1;
 		}
 	}
 	return a;
@@ -263,6 +280,22 @@ double max_entry(double* a, int n, int *row, int *col)
 		}
 	}
 	return max_val;
+}
+//----------------------------------------------------------------------------
+double off_norm(double* a, int n)
+{
+	int j, i;
+	double val, sum = 0;
+
+	for (i = 0; i < (n - 1); ++i)
+	{
+		for (j = i + 1; j < n; ++j)
+		{
+			val = fabs(a_transpose_a(a, n, i, j));
+			sum += (val * val);
+		}
+	}
+	return sqrt(2 * sum);
 }
 //----------------------------------------------------------------------------
 int compare (const void * a, const void * b)
