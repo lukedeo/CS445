@@ -16,7 +16,7 @@ void mat_free(double** A, int n);
 void jacobi(double** A, int n, double *s, double **U, double **V);
 void rotate(double** A, int n, int p, int q, double** U);
 double sign(double val);
-double A_transpose_A(double** A, int n, int row, int col);
+double A_transpose_A(double* A, int n, int row, int col);
 double max_entry(double** A, int n, int *row, int *col);
 singular_value* singular_value_accumulate(double** A, int n);
 double** matrix_part_b(int n);
@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 //----------------------------------------------------------------------------
-double A_transpose_A(double** A, int n, int row, int col)
+double A_transpose_A(double* A, int n, int row, int col)
 {
 	int i;
 	double sum = 0;
@@ -84,9 +84,9 @@ void rotate(double **A, int n, int p, int q, double** U)
 	       a_qq, t, 
 	       c, s, A_temp;
 
-	a_pp = A_transpose_A(A, n, p, p);
-	a_pq = A_transpose_A(A, n, p, q);
-	a_qq = A_transpose_A(A, n, q, q);
+	a_pp = A_transpose_A((double(*)[n])A, n, p, p);
+	a_pq = A_transpose_A((double(*)[n])A, n, p, q);
+	a_qq = A_transpose_A((double(*)[n])A, n, q, q);
 
 	t = (a_pp - a_qq) / (2 *(a_pq));
 	t = sign(t) / (fabs(t) + sqrt(1 + t * t));
