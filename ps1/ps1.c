@@ -9,19 +9,19 @@ typedef struct singular_value
 } singular_value;
 
 int compare (const void * a, const void * b);
-void eyeify(double** A, int n);
-void mat_print(double** A, int n);
-void vec_print(double* A, int n);
-void mat_free(double** A, int n);
-void jacobi(double** A, int n, double *s, double **U, double **V);
-void rotate(double** A, int n, int p, int q, double** U);
+void eyeify(double* a, int n);
+void mat_print(double* a, int n);
+void vec_print(double* a, int n);
+// void mat_free(double* a, int n);
+void jacobi(double* a, int n, double *s, double *u, double *v);
+void rotate(double* a, int n, int p, int q, double* u);
 double sign(double val);
-double A_transpose_A(double* A, int n, int row, int col);
-double max_entry(double** A, int n, int *row, int *col);
-singular_value* singular_value_accumulate(double** A, int n);
-double** matrix_part_b(int n);
-double** matrix_part_c(int n);
-double** eye(int n);
+double a_transpose_a(double* a, int n, int row, int col);
+double max_entry(double* a, int n, int *row, int *col);
+singular_value* singular_value_accumulate(double* a, int n);
+double* matrix_part_b(int n);
+double* matrix_part_c(int n);
+double* eye(int n);
 
 int main(int argc, char const *argv[])
 {
@@ -32,17 +32,17 @@ int main(int argc, char const *argv[])
 	}
 	char part = (char)(*(argv[1]));
 	int n = atoi(argv[2]);
-	double **A, **U, **V, *s;
-	V = eye(n);
-	U = eye(n);
+	double *a, *u, *v, *s;
+	v = eye(n);
+	u = eye(n);
 	s = malloc(n * sizeof(double));
 	if ((part == 'b') || (part == 'B'))
 	{
-		A = matrix_part_b(n);
+		a = matrix_part_b(n);
 	}
 	else if ((part == 'C') || (part == 'c'))
 	{
-		A = matrix_part_c(n);
+		a = matrix_part_c(n);
 	}
 	else
 	{
@@ -50,43 +50,43 @@ int main(int argc, char const *argv[])
 		return -1;
 
 	}
-	jacobi(A, n, s, U, V);
-	printf("\nU = \n");
-	mat_print(U, n);
-	printf("\nV = \n");
-	mat_print(V, n);
+	jacobi(a, n, s, u, v);
+	printf("\nu = \n");
+	mat_print(u, n);
+	printf("\nv = \n");
+	mat_print(v, n);
 	printf("\ns = \n");
 	vec_print(s, n);
 	printf("\n");
 
 	free(s);
-	mat_free(A, n);
-	mat_free(U, n);
-	mat_free(V, n);
+	free(a);
+	free(u);
+	free(v);
 	return 0;
 }
 //----------------------------------------------------------------------------
-double A_transpose_A(double* A, int n, int row, int col)
+double a_transpose_a(double* a, int n, int row, int col)
 {
 	int i;
 	double sum = 0;
 	for(i = 0; i < n; ++i)
 	{
-		sum += A[i][row] * A[i][col];
+		sum += a[i * n + row] * a[i * n + col];
 	}
 	return sum;
 }
 //----------------------------------------------------------------------------
-void rotate(double **A, int n, int p, int q, double** U)
+void rotate(double *a, int n, int p, int q, double* u)
 {
 	int i;
 	double a_pp, a_pq, 
 	       a_qq, t, 
-	       c, s, A_temp;
+	       c, s, a_temp;
 
-	a_pp = A_transpose_A((double(*)[n])A, n, p, p);
-	a_pq = A_transpose_A((double(*)[n])A, n, p, q);
-	a_qq = A_transpose_A((double(*)[n])A, n, q, q);
+	a_pp = a_transpose_a(a, n, p, p);
+	a_pq = a_transpose_a(a, n, p, q);
+	a_qq = a_transpose_a(a, n, q, q);
 
 	t = (a_pp - a_qq) / (2 *(a_pq));
 	t = sign(t) / (fabs(t) + sqrt(1 + t * t));
@@ -94,44 +94,44 @@ void rotate(double **A, int n, int p, int q, double** U)
 	s = (c * t);
 	for (i = 0; i < n; ++i)
 	{
-		A_temp = A[i][p];
-		A[i][p] = s * A[i][q] + c * A_temp;
-		A[i][q] = c * A[i][q] - s * A_temp;
+		a_temp = a[i * n + p];
+		a[i * n + p] = s * a[i * n + q] + c * a_temp;
+		a[i * n + q] = c * a[i * n + q] - s * a_temp;
 
-		A_temp = U[i][p];
-		U[i][p] = s * U[i][q] + c * A_temp;
-		U[i][q] = c * U[i][q] - s * A_temp;
+		a_temp = u[i * n + p];
+		u[i * n + p] = s * u[i * n + q] + c * a_temp;
+		u[i * n + q] = c * u[i * n + q] - s * a_temp;
 	}
 }
 //----------------------------------------------------------------------------
-void jacobi(double** A, int n, double *s, double **U, double **V)
+void jacobi(double* a, int n, double *s, double *u, double *v)
 {
 	int i, j;
 	double epsilon = 1e-10, temp;
 	int iter_max = 1000000, iters = 0;
 
-	double** T;
+	double* T;
 	T = eye(n);
 
-	while ((max_entry(A, n, &i, &j) > epsilon * (sqrt(A_transpose_A(A, n, i, i) * A_transpose_A(A, n, j, j)))) && (iters < iter_max))
+	while ((max_entry(a, n, &i, &j) > epsilon * (sqrt(a_transpose_a(a, n, i, i) * a_transpose_a(a, n, j, j)))) && (iters < iter_max))
 	{
-		rotate(A, n, i, j, T);
+		rotate(a, n, i, j, T);
 		++iters;
 	}
 
 	singular_value *sigma;
-	sigma = singular_value_accumulate(A, n);
+	sigma = singular_value_accumulate(a, n);
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
-			U[i][j] = A[i][sigma[j].index];
-			V[i][j] = T[i][sigma[j].index];
+			u[i * n + j] = a[i * n + sigma[j].index];
+			v[i * n + j] = T[i * n + sigma[j].index];
 		}
 		s[i] = sigma[i].value;
 		printf("%f  ", sigma[i].value);
 	}
-	mat_free(T, n);
+	free(T);
 	free(sigma);
 }
 //----------------------------------------------------------------------------
@@ -144,32 +144,28 @@ double sign(double val)
 	return 1;
 }
 //----------------------------------------------------------------------------
-double** eye(int n)
+double* eye(int n)
 {
-	double** I = malloc(n * sizeof(double));
+	double* I = malloc(n * n * sizeof(double));
 	int i, j;
-	for (i = 0; i < n; ++i)
-	{
-		I[i] = malloc(n * sizeof(double));
-	}
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
 			if (i != j)
 			{
-				I[i][j] = 0.0;
+				I[i * n + j] = 0.0;
 			}
 			else
 			{
-				I[i][j] = 1.0;
+				I[i * n + j] = 1.0;
 			}
 		}
 	}
 	return I;
 }
 //----------------------------------------------------------------------------
-void eyeify(double** A, int n)
+void eyeify(double* a, int n)
 {
 	int i, j;
 	for (i = 0; i < n; ++i)
@@ -178,86 +174,78 @@ void eyeify(double** A, int n)
 		{
 			if (i != j)
 			{
-				A[i][j] = 0.0;
+				a[i * n + j] = 0.0;
 			}
 			else
 			{
-				A[i][j] = 1.0;
+				a[i * n + j] = 1.0;
 			}
 		}
 	}
 }
 //----------------------------------------------------------------------------
-void mat_print(double** A, int n)
+void mat_print(double* a, int n)
 {
 	int i, j;
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
-			printf("%f  ", A[i][j]);
+			printf("%f  ", a[i * n + j]);
 		}
 		printf("\n");
 	}
 }
 //----------------------------------------------------------------------------
-void vec_print(double* A, int n)
+void vec_print(double* a, int n)
 {
 	int j;
 	for (j = 0; j < n; ++j)
 	{
-		printf("%e  ", A[j]);
+		printf("%e  ", a[j]);
 	}
 }
 
 //----------------------------------------------------------------------------
-void mat_free(double** A, int n)
-{
-	int i;
-	for (i = 0; i < n; ++i)
-	{
-		free(A[i]);
-	}
-	free(A);
-}
+// void mat_free(double* a, int n)
+// {
+// 	int i;
+// 	for (i = 0; i < n; ++i)
+// 	{
+// 		free(a[i]);
+// 	}
+// 	free(a);
+// }
 //----------------------------------------------------------------------------
-double** matrix_part_b(int n)
+double* matrix_part_b(int n)
 {
-	double** A = malloc(n * sizeof(double));
+	double* a = malloc(n * n * sizeof(double));
 	int i, j;
-	for (i = 0; i < n; ++i)
-	{
-		A[i] = malloc(n * sizeof(double));
-	}
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
-			A[i][j] = sqrt(i * i + j * j);
+			a[i * n + j] = sqrt(i * i + j * j);
 		}
 	}
-	return A;
+	return a;
 }
 //----------------------------------------------------------------------------
-double** matrix_part_c(int n)
+double* matrix_part_c(int n)
 {
-	double** A = malloc(n * sizeof(double));
+	double* a = malloc(n * n * sizeof(double));
 	int i, j;
-	for (i = 0; i < n; ++i)
-	{
-		A[i] = malloc(n * sizeof(double));
-	}
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
 		{
-			A[i][j] = i * i + j * j;
+			a[i * n + j] = i * i + j * j;
 		}
 	}
-	return A;
+	return a;
 }
 //----------------------------------------------------------------------------
-double max_entry(double** A, int n, int *row, int *col)
+double max_entry(double* a, int n, int *row, int *col)
 {
 	int j, i;
 	double val, max_val = 0;
@@ -265,7 +253,7 @@ double max_entry(double** A, int n, int *row, int *col)
 	{
 		for (j = i + 1; j < n; ++j)
 		{
-			val = fabs(A_transpose_A(A, n, i, j));
+			val = fabs(a_transpose_a(a, n, i, j));
 			if (val > max_val)
 			{
 				max_val = val;
@@ -293,7 +281,7 @@ int compare (const void * a, const void * b)
 	}
 }
 //----------------------------------------------------------------------------
-singular_value* singular_value_accumulate(double** A, int n)
+singular_value* singular_value_accumulate(double* a, int n)
 {
 	singular_value* data;
 	data = malloc(n * sizeof(singular_value));
@@ -304,14 +292,14 @@ singular_value* singular_value_accumulate(double** A, int n)
 		sum = 0;
 		for (i = 0; i < n; ++i)
 		{
-			sum += (A[i][j] * A[i][j]);
+			sum += (a[i * n + j] * a[i * n + j]);
 		}
 		sing_val = sqrt(sum);
 		data[j].value = sing_val;
 		data[j].index = j;
 		for (i = 0; i < n; ++i)
 		{
-			A[i][j] /= sing_val;
+			a[i * n + j] /= sing_val;
 		}
 	}
 	qsort(data, n, sizeof(singular_value), compare);
