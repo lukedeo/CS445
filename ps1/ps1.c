@@ -110,30 +110,42 @@ void rotate(double *a, int n, int p, int q, double* u)
 //----------------------------------------------------------------------------
 void jacobi(double* a, int n, double *s, double *u, double *v)
 {
-	int i, j;
-	double epsilon = 1e-12;
-	int iter_max = 1000000, iters = 0;
+	int i, j, nullspace = 0;
+	double epsilon = 1e-15, comparison;
+	int iter_max = 10000, iters = 0, count = 1;
 
 	double* T;
 	T = eye(n);
 
-	while ((max_entry(a, n, &i, &j) > epsilon * (sqrt(a_transpose_a(a, n, i, i) * a_transpose_a(a, n, j, j)))) && (iters < iter_max))
+	while ((count != 0) && (iters < iter_max))
 	{
-		rotate(a, n, i, j, T);
+		count = 0;
+		for (i = 0; i < (n - 1); ++i)
+		{
+			for (j = i + 1; j < n; ++j)
+			{
+				comparison = epsilon * (sqrt(a_transpose_a(a, n, i, i) * a_transpose_a(a, n, j, j)));
+				if (fabs(a_transpose_a(a, n, i, j)) > comparison)
+				{
+					rotate(a, n, i, j, T);
+					++count;
+				}
+			}
+		}
 		++iters;
 	}
 	if (iters == iter_max)
 	{
-		printf("Jacobi's Method failed to converge. Terminating\n");
+		printf("\nJacobi's Method failed to converge. Terminating\n");
 		return;
 	}
 	else
 	{
-		printf("Jacobi's method converged in %i iterations.\n", iters);
+		printf("\nJacobi's method converged in %i iterations.\n", iters);
 	}
 	singular_value *sigma;
 	sigma = singular_value_accumulate(a, n);
-	printf("Below are the singular values > 1.0E-13:\n");
+	printf("\nBelow are the singular values > 1.0E-13:\n\n");
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < n; ++j)
@@ -146,6 +158,18 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 		{
 			printf("%g  ", sigma[i].value);
 		}
+		else
+		{
+			++nullspace;
+		}
+	}
+	if (nullspace > 0)
+	{
+		printf("\n\nThe matrix is probably not of full rank. n = %i, and rank(A) =~ %i.\n", n, n - nullspace);
+	}
+	else
+	{
+		printf("\n\nThe matrix is probably of full rank.\n");
 	}
 	printf("\nBelow is the column vector associated with the largest singular value (eigenvalue of the implicit Gram Matrix):\n");
 	for (i = 0; i < n; ++i)
