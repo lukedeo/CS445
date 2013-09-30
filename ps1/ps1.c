@@ -15,7 +15,7 @@ void vec_print(double* a, int n);
 void jacobi(double* a, int n, double *s, double *u, double *v);
 void rotate(double* a, int n, int p, int q, double* u);
 double sign(double val);
-double a_transpose_a(double* a, int n, int row, int col);
+double gram_entry(double* a, int n, int row, int col);
 double max_entry(double* a, int n, int *row, int *col);
 singular_value* singular_value_accumulate(double* a, int n);
 double* matrix_part_b(int n);
@@ -48,20 +48,22 @@ int main(int argc, char const *argv[])
 	{
 		printf("Error: invalid part.\n");
 		return -1;
-
 	}
-
 
 	jacobi(a, n, s, u, v);
 
+	a = matrix_part_b(n);
 
-	// printf("\nu = \n");
-	// mat_print(u, n);
-	// printf("\nv = \n");
-	// mat_print(v, n);
-	// printf("\ns = \n");
-	// vec_print(s, n);
-	// printf("\n");
+	printf("\nu = \n");
+	mat_print(a, n);
+
+	printf("\nu = \n");
+	mat_print(u, n);
+	printf("\nv = \n");
+	mat_print(v, n);
+	printf("\ns = \n");
+	vec_print(s, n);
+	printf("\n");
 
 	free(s);
 	free(a);
@@ -70,7 +72,7 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 //----------------------------------------------------------------------------
-double a_transpose_a(double* a, int n, int row, int col)
+double gram_entry(double* a, int n, int row, int col)
 {
 	int i;
 	double sum = 0;
@@ -88,9 +90,9 @@ void rotate(double *a, int n, int p, int q, double* u)
 	       a_qq, t, 
 	       c, s, a_temp;
 
-	a_pp = a_transpose_a(a, n, p, p);
-	a_pq = a_transpose_a(a, n, p, q);
-	a_qq = a_transpose_a(a, n, q, q);
+	a_pp = gram_entry(a, n, p, p);
+	a_pq = gram_entry(a, n, p, q);
+	a_qq = gram_entry(a, n, q, q);
 
 	t = (a_pp - a_qq) / (2 *(a_pq));
 	t = sign(t) / (fabs(t) + sqrt(1 + t * t));
@@ -124,8 +126,8 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 		{
 			for (j = i + 1; j < n; ++j)
 			{
-				comparison = epsilon * (sqrt(a_transpose_a(a, n, i, i) * a_transpose_a(a, n, j, j)));
-				if (fabs(a_transpose_a(a, n, i, j)) > comparison)
+				comparison = epsilon * (sqrt(gram_entry(a, n, i, i) * gram_entry(a, n, j, j)));
+				if (fabs(gram_entry(a, n, i, j)) > comparison)
 				{
 					rotate(a, n, i, j, T);
 					++count;
@@ -165,7 +167,7 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 	}
 	if (nullspace > 0)
 	{
-		printf("\n\nThe matrix is probably not of full rank. n = %i, and rank(A) =~ %i.\n", n, n - nullspace);
+		printf("\n\nThe matrix is probably not of full rank. n = %i, and rank(A) is approximately %i.\n", n, n - nullspace);
 	}
 	else
 	{
@@ -294,7 +296,7 @@ double max_entry(double* a, int n, int *row, int *col)
 	{
 		for (j = i + 1; j < n; ++j)
 		{
-			val = fabs(a_transpose_a(a, n, i, j));
+			val = fabs(gram_entry(a, n, i, j));
 			if (val > max_val)
 			{
 				max_val = val;
@@ -315,7 +317,7 @@ double off_norm(double* a, int n)
 	{
 		for (j = i + 1; j < n; ++j)
 		{
-			val = fabs(a_transpose_a(a, n, i, j));
+			val = fabs(gram_entry(a, n, i, j));
 			sum += (val * val);
 		}
 	}
@@ -324,15 +326,15 @@ double off_norm(double* a, int n)
 //----------------------------------------------------------------------------
 int compare (const void * a, const void * b)
 {
-	if ( (*(singular_value*)a).value >  (*(singular_value*)b).value )
+	if ((*(singular_value*)a).value > (*(singular_value*)b).value)
 	{
 		return -1;
 	}
-	if ( (*(singular_value*)a).value == (*(singular_value*)b).value )
+	if ((*(singular_value*)a).value == (*(singular_value*)b).value)
 	{
 		return 0;
 	}
-	if ( (*(singular_value*)a).value <  (*(singular_value*)b).value )
+	if ((*(singular_value*)a).value <  (*(singular_value*)b).value)
 	{
 		return 1;
 	}
