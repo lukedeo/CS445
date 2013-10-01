@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-//	Yale CPSC 445a, Problem Set 1
+//  Yale CPSC 445a, Problem Set 1
 //  Implementation of SVD (One-Sided Jacobi Rotations)
 //  By: Luke de Oliveira
 //  Yale College `14
