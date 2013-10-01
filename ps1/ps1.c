@@ -1,18 +1,22 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+//-----------------------------------------------------------------------------
+//	Stuff for sorting the columns in decreasing order of singular values
+//-----------------------------------------------------------------------------
 typedef struct singular_value
 {
 	int index;
 	double value;
 } singular_value;
-
 int compare (const void * a, const void * b);
+//-----------------------------------------------------------------------------
+//	Pre declarations of some functions, and the main Jacobi one.
+//-----------------------------------------------------------------------------
+void jacobi(double* a, int n, double *s, double *u, double *v);
 void eyeify(double* a, int n);
 void mat_print(double* a, int n);
 void vec_print(double* a, int n);
-void jacobi(double* a, int n, double *s, double *u, double *v);
 void rotate(double* a, int n, int p, int q, double* u);
 double sign(double val);
 double gram_entry(double* a, int n, int row, int col);
@@ -22,7 +26,9 @@ double* matrix_part_b(int n);
 double* matrix_part_c(int n); 
 double* eye(int n);
 double off_norm(double* a, int n);
-
+//-----------------------------------------------------------------------------
+//	Main function, to be deleted.
+//-----------------------------------------------------------------------------
 int main(int argc, char const *argv[])
 {
 	if (argc == 1)
@@ -54,9 +60,8 @@ int main(int argc, char const *argv[])
 
 	a = matrix_part_b(n);
 
-	printf("\nu = \n");
+	printf("\na = \n");
 	mat_print(a, n);
-
 	printf("\nu = \n");
 	mat_print(u, n);
 	printf("\nv = \n");
@@ -71,7 +76,9 @@ int main(int argc, char const *argv[])
 	free(v);
 	return 0;
 }
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//	Implementations of functions.
+//-----------------------------------------------------------------------------
 double gram_entry(double* a, int n, int row, int col)
 {
 	int i;
@@ -87,13 +94,11 @@ void rotate(double *a, int n, int p, int q, double* u)
 {
 	int i;
 	double a_pp, a_pq, 
-	       a_qq, t, 
-	       c, s, a_temp;
-
+           a_qq, t, 
+           c, s, a_temp;
 	a_pp = gram_entry(a, n, p, p);
 	a_pq = gram_entry(a, n, p, q);
 	a_qq = gram_entry(a, n, q, q);
-
 	t = (a_pp - a_qq) / (2 *(a_pq));
 	t = sign(t) / (fabs(t) + sqrt(1 + t * t));
 	c = 1 / sqrt(1 + t * t);
