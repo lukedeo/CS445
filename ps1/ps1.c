@@ -171,7 +171,7 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 		s[i] = sigma[i].value;
 		if (sigma[i].value > 1.0e-13)
 		{
-			printf("%g  ", sigma[i].value);
+			printf("%e  ", sigma[i].value);
 		}
 		else
 		{
@@ -189,7 +189,7 @@ void jacobi(double* a, int n, double *s, double *u, double *v)
 	printf("\nBelow is the column vector associated with the largest singular value (eigenvalue of the implicit Gram Matrix):\n");
 	for (i = 0; i < n; ++i)
 	{
-		printf("%f\n", u[i * n]);
+		printf("%e\n", u[i * n]);
 	}
 
 	free(T);
