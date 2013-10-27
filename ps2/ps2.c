@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //  Yale CPSC 445a, Problem Set 2
-//  Implementation of Steepest Descent
+//  Implementation of Steepest Descent on Ax = y
 //  By: Luke de Oliveira
 //  Yale College `14
 //  10/9/13
@@ -11,6 +11,67 @@
 #include <math.h>
 #include <string.h>
 
+
+void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, int *niter, double *discreps);
+double line_search(double *a, double *Ax_b, int n);
+double residual_norm(double *Ax_b, int n);
+void general_multiply(double *left, double *right, double *result, int m, int n);
+void row_gram_matrix(double *A, double *result, int n);
+void matrix_vector(double *matrix, double *vector, double *result, int n);
+double *gradient(double *a, double *Ax_b, int n);
+void print(double *matrix, int m, int n);
+void vector_subtract(double *left, double *right, double *result, int n);
+double norm(double *vector, int n);
+void matrix_transpose(double *matrix, int n);
+void pair_gen(double *A, double *y, int n);
+
+
+int main(int argc, char const *argv[])
+{
+	int n = atoi(argv[1]);
+	int numit = 10000, niter, i;
+	double eps = 10e-6;
+	double *matrix, *vector, *discreps, *x, *temp;
+	matrix = (double *) malloc (sizeof (double) * (n * n));
+    vector = (double *) malloc (sizeof (double) * n);
+    discreps = (double *) malloc (sizeof (double) * numit);
+    x = (double *) malloc (sizeof (double) * n);
+    temp = (double *) malloc (sizeof (double) * n);
+
+	pair_gen(matrix, vector, n);
+
+
+	dumb_solve(matrix, vector, n, eps, numit, x, &niter, discreps);
+
+    /* Printing results ... */
+    printf ("Solution to linear system");
+    print (x, n, 1);
+    printf ("Multiply solution by A to see if we get original vector");
+    general_multiply (matrix, x, temp, n, 1);        
+    print (temp, n, 1);
+    printf ("Number of iterations made: %d\n", niter);
+    printf ("Discrepancy values:\n");
+    for (i = 0; i < niter; i++) {
+            if (i == (numit - 1)) {break;}
+            if ((i % 15) == 0) {printf ("\n");}
+            printf ("%.8f ", discreps [i]);
+    }
+
+    free (matrix); free (vector); free (discreps); free (x); free (temp);
+	return 0;
+}
+
+void pair_gen(double *A, double *y, int n)
+{
+	int i;
+	for (i = 0; i < n; ++i)
+	{
+		double ip1 = (double)(i + 1);
+		A[i * n + i] = 1 / ((ip1) * (ip1));
+		printf("%f\n",  1 / ((ip1) * (ip1)));
+		y[i] = 1.0;
+	}
+}
 
 void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, int *niter, double *discreps) 
 {
@@ -25,13 +86,13 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	//We let the initial guess be zero
 	for (i = 0; i < n; i++) 
 	{
-		x_n[i] = 0;
+		x_n[i] = 1;
 	}
 
 	for (*niter = 0; (*niter < numit); (*niter)++) 
 	{
-		general_multiply (a, x_n, Ax, n, 1); // Calculates Ax
-		subtract (Ax, y, Ax_b, n); // Calculates Ax - b, sticks into Ax_b
+		matrix_vector(a, x_n, Ax, n); // Calculates Ax
+		vector_subtract (Ax, y, Ax_b, n); // Calculates Ax - b, sticks into Ax_b
 
 		error = residual_norm(Ax_b, n);
 
@@ -44,14 +105,14 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 		//Calculare the new solution iterate.
 
 		grad = gradient(a, Ax_b, n);
-		step_size = stepSize (a, Ax_b, n);
+		step_size = line_search(a, Ax_b, n);
 
 		for (i = 0; i < n; i++)
 		{
 			grad[i] = step_size * grad[i];
 		}
-		subtract (x_n, grad, x_n, n);
-		free (grad);
+		vector_subtract(x_n, grad, x_n, n);
+		free(grad);
 	}
 
 	/* Copy over answer to solution vector x */
@@ -66,7 +127,7 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	return;
 }
 //----------------------------------------------------------------------------
-double stepSize (double *a, double *Ax_b, int n) {
+double line_search (double *a, double *Ax_b, int n) {
 	int i;
 	double *at = (double *) malloc (sizeof (double) * (n * n));
 	double *aat = (double *) malloc (sizeof (double) * (n * n));
@@ -75,15 +136,15 @@ double stepSize (double *a, double *Ax_b, int n) {
 	double nominator = 0.0;
 	double denominator = 0.0;
 
-	/* Calculate A transpose */
+	/* Calculate A matrix_transpose */
 	for (i = 0; i < (n * n); i++) 
 	{
 		at[i] = a[i];
 	}
-	transpose (at, n);
+	matrix_transpose (at, n);
 
 	/* Calculate At * (Ax - b) */
-	general_multiply (at, Ax_b, nom, n, 1);
+	matrix_vector(at, Ax_b, nom, n);
 
 	/* Calculate norm squared of At * (Ax - b), i.e. nominator */
 	for (i = 0; i < n; i++) 
@@ -92,10 +153,16 @@ double stepSize (double *a, double *Ax_b, int n) {
 	}
 
 	/* Calculate A*At */
-	general_multiply (a, at, aat, n, n);
+	// general_multiply(a, at, aat, n, n);
+	// row_gram_matrix(a, aat, n);
+
 
 	/* Calculate A*At * (Ax - b) */
-	general_multiply (aat, Ax_b, denom, n, 1);
+	// matrix_vector(aat, Ax_b, denom, n);
+
+
+
+	matrix_vector(a, nom, denom, n);
 
 	/* Calculate the norm squared of A*At * (Ax - b), i.e. denominator */
 	for (i = 0; i < n; i++) 
@@ -138,8 +205,8 @@ void general_multiply (double *left, double *right, double *result, int m, int n
 	}
 	return;
 }
-
-void column_gram_matrix(double *A, double *result, int n)
+//----------------------------------------------------------------------------
+void row_gram_matrix(double *A, double *result, int n) // computes A^T A more efficiently
 {
 	int i, j, k;
 	for (i = 0; i < n; ++i)
@@ -149,7 +216,7 @@ void column_gram_matrix(double *A, double *result, int n)
 			double temp = 0.0;
 			for (k = 0; k < n; ++k)
 			{
-				temp += A[i * n + k] * A[k * n + k];
+				temp += A[i * n + k] * A[j * n + k];
 			}
 			result[i * n + j] = temp;
 			if (i != j)
@@ -160,8 +227,21 @@ void column_gram_matrix(double *A, double *result, int n)
 	}
 	return;
 }
-
-
+//----------------------------------------------------------------------------
+void matrix_vector(double *matrix, double *vector, double *result, int n)
+{
+	int i, j;
+	for (i = 0; i < n; ++i)
+	{
+		double temp = 0.0;
+		for (j = 0; j < n; ++j)
+		{
+			temp += matrix[i * n + j] * vector[j];
+		}
+		result[i] = temp;
+	}
+	return;
+}
 
 //----------------------------------------------------------------------------
 double *gradient (double *a, double *Ax_b, int n) 
@@ -175,10 +255,12 @@ double *gradient (double *a, double *Ax_b, int n)
 	{
 		at[i] = 2 * a[i];
 	}
-	transpose (at, n);
+	matrix_transpose(at, n);
 
 	/* Calculate 2At(Ax - b) */
-	general_multiply (at, Ax_b, gradient, n, 1);
+
+	// general_multiply (at, Ax_b, gradient, n, 1);
+	matrix_vector(at, Ax_b, gradient, n);
 
 	free (at);
 	return gradient;
@@ -197,7 +279,7 @@ void print (double *matrix, int m, int n)
 	return;
 }
 //----------------------------------------------------------------------------
-void subtract (double *left, double *right, double *result, int n) 
+void vector_subtract (double *left, double *right, double *result, int n) 
 {
 	int i;
 	for (i = 0; i < n; i++)
@@ -218,7 +300,7 @@ double norm (double *vector, int n)
 	return sqrt (result);
 }
 //----------------------------------------------------------------------------
-void transpose (double *matrix, int n) 
+void matrix_transpose (double *matrix, int n) 
 {
 	double temp;
 	int i, j;
