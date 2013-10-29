@@ -16,7 +16,6 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 double line_search(double *a, double *Ax_b, int n);
 double residual_norm(double *Ax_b, int n);
 void general_multiply(double *left, double *right, double *result, int m, int n);
-void row_gram_matrix(double *A, double *result, int n);
 void matrix_vector(double *matrix, double *vector, double *result, int n);
 double *gradient(double *a, double *Ax_b, int n);
 void print(double *matrix, int m, int n);
@@ -141,7 +140,7 @@ double line_search (double *a, double *Ax_b, int n) {
 	{
 		at[i] = a[i];
 	}
-	matrix_transpose (at, n);
+	matrix_transpose(at, n);
 
 	/* Calculate At * (Ax - b) */
 	matrix_vector(at, Ax_b, nom, n);
@@ -151,16 +150,6 @@ double line_search (double *a, double *Ax_b, int n) {
 	{
 		nominator += nom[i] * nom[i];
 	}
-
-	/* Calculate A*At */
-	// general_multiply(a, at, aat, n, n);
-	// row_gram_matrix(a, aat, n);
-
-
-	/* Calculate A*At * (Ax - b) */
-	// matrix_vector(aat, Ax_b, denom, n);
-
-
 
 	matrix_vector(a, nom, denom, n);
 
@@ -206,28 +195,6 @@ void general_multiply (double *left, double *right, double *result, int m, int n
 	return;
 }
 //----------------------------------------------------------------------------
-void row_gram_matrix(double *A, double *result, int n) // computes A^T A more efficiently
-{
-	int i, j, k;
-	for (i = 0; i < n; ++i)
-	{
-		for (j = i; j < n; ++j)
-		{
-			double temp = 0.0;
-			for (k = 0; k < n; ++k)
-			{
-				temp += A[i * n + k] * A[j * n + k];
-			}
-			result[i * n + j] = temp;
-			if (i != j)
-			{
-				result[j * n + i] = temp;
-			}
-		}
-	}
-	return;
-}
-//----------------------------------------------------------------------------
 void matrix_vector(double *matrix, double *vector, double *result, int n)
 {
 	int i, j;
@@ -257,7 +224,7 @@ double *gradient (double *a, double *Ax_b, int n)
 	}
 	matrix_transpose(at, n);
 
-	/* Calculate 2At(Ax - b) */
+	// Calculate 2At(Ax - b) 
 
 	// general_multiply (at, Ax_b, gradient, n, 1);
 	matrix_vector(at, Ax_b, gradient, n);
@@ -269,13 +236,16 @@ double *gradient (double *a, double *Ax_b, int n)
 void print (double *matrix, int m, int n) 
 {
 	int i, j;
-	printf ("\n");
-	for (i = 0; i < m; i++) {
+	printf("\n");
+	for (i = 0; i < m; i++) 
+	{
 		for (j = 0; j < n; j++)
-			printf ("%.9f\t", matrix[i * n + j]);
-		printf ("\n");
+		{
+			printf("%.9f\t", matrix[i * n + j]);
+		}
+		printf("\n");
 	}
-	printf ("\n");
+	printf("\n");
 	return;
 }
 //----------------------------------------------------------------------------
