@@ -120,7 +120,7 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	//We let the initial guess be the vector of ones
 	for (i = 0; i < n; i++) 
 	{
-		x_n[i] = 0;
+		x_n[i] = 1;
 	}
 
 	for (*niter = 0; (*niter < numit); (*niter)++) 
