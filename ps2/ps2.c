@@ -42,45 +42,44 @@ int main(int argc, char const *argv[])
 	double eps = 10e-6;
 	double *matrix, *vector, *discreps, *x, *temp;
 	matrix = (double *) malloc (sizeof (double) * (n * n));
-    vector = (double *) malloc (sizeof (double) * n);
-    discreps = (double *) malloc (sizeof (double) * numit);
-    x = (double *) malloc (sizeof (double) * n);
-    temp = (double *) malloc (sizeof (double) * n);
+	vector = (double *) malloc (sizeof (double) * n);
+	discreps = (double *) malloc (sizeof (double) * numit);
+	x = (double *) malloc (sizeof (double) * n);
+	temp = (double *) malloc (sizeof (double) * n);
 
 	pair_gen(matrix, vector, n);
 
 	//solve the system!
 	dumb_solve(matrix, vector, n, eps, numit, x, &niter, discreps);
-   	
-   	//Print the results
-    printf("Solution to linear system");
-    print(x, n, 1);
-    printf("Multiply solution by A to see if we get the original vector");
-    general_multiply(matrix, x, temp, n, 1);        
-    print(temp, n, 1);
-    printf("Number of iterations: %d\n", niter);
-    printf("Discrepancy values:\n");
-    for (i = 0; i < niter; i++) 
-    {
-        if (i == (numit - 1)) 
-        {
-        	break;
-        }
-        if (i != 0)
-        {
-        	printf(", %.8f", discreps[i]);
-        }
-        else
-        {
-        	printf("%.8f", discreps[i]);
-        }
-		
-    }
-    free(matrix); 
-    free(vector); 
-    free(discreps); 
-    free(x); 
-    free(temp);
+
+	//Print the results
+	printf("Solution to linear system");
+	print(x, n, 1);
+	printf("Multiply solution by A to see if we get the original vector");
+	general_multiply(matrix, x, temp, n, 1);        
+	print(temp, n, 1);
+	printf("Number of iterations: %d\n", niter);
+	printf("Discrepancy values:\n");
+	for (i = 0; i < niter; i++) 
+	{
+		if (i == (numit - 1)) 
+		{
+			break;
+		}
+		if (i != 0)
+		{
+			printf(", %.8f", discreps[i]);
+		}
+		else
+		{
+			printf("%.8f", discreps[i]);
+		}
+	}
+	free(matrix); 
+	free(vector); 
+	free(discreps); 
+	free(x); 
+	free(temp);
 	return 0;
 }
 
