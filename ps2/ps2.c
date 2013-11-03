@@ -130,9 +130,9 @@ double line_search (double *a, double *Ax_b, int n) {
 	int i;
 	double *at = (double *) malloc (sizeof (double) * (n * n));
 	double *aat = (double *) malloc (sizeof (double) * (n * n));
-	double *nom = (double *) malloc (sizeof (double) * n);
+	double *top = (double *) malloc (sizeof (double) * n);
 	double *denom = (double *) malloc (sizeof (double) * n);
-	double nominator = 0.0;
+	double numerator = 0.0;
 	double denominator = 0.0;
 
 	/* Calculate A matrix_transpose */
@@ -143,15 +143,15 @@ double line_search (double *a, double *Ax_b, int n) {
 	matrix_transpose(at, n);
 
 	/* Calculate At * (Ax - b) */
-	matrix_vector(at, Ax_b, nom, n);
+	matrix_vector(at, Ax_b, top, n);
 
-	/* Calculate norm squared of At * (Ax - b), i.e. nominator */
+	/* Calculate norm squared of At * (Ax - b), i.e. numerator */
 	for (i = 0; i < n; i++) 
 	{
-		nominator += nom[i] * nom[i];
+		numerator += top[i] * top[i];
 	}
 
-	matrix_vector(a, nom, denom, n);
+	matrix_vector(a, top, denom, n);
 
 	/* Calculate the norm squared of A*At * (Ax - b), i.e. denominator */
 	for (i = 0; i < n; i++) 
@@ -159,8 +159,8 @@ double line_search (double *a, double *Ax_b, int n) {
 		denominator += denom[i] * denom[i];
 	}
 
-	free (at); free (aat); free (nom); free (denom);
-	return (nominator / (2.0 * denominator));
+	free (at); free (aat); free (top); free (denom);
+	return (numerator / (2.0 * denominator));
 }
 //----------------------------------------------------------------------------
 double residual_norm(double *Ax_b, int n) 
