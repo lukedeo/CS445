@@ -104,7 +104,7 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 		//Calculare the new solution iterate.
 
 		grad = gradient(a, Ax_b, n);
-		step_size = line_search(a, Ax_b, n);
+		step_size = line_search(a, grad, n);
 
 		for (i = 0; i < n; i++)
 		{
@@ -126,7 +126,47 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	return;
 }
 //----------------------------------------------------------------------------
-double line_search (double *a, double *Ax_b, int n) {
+// double line_search (double *a, double *Ax_b, int n) {
+// 	int i;
+// 	double *at = (double *) malloc (sizeof (double) * (n * n));
+// 	double *aat = (double *) malloc (sizeof (double) * (n * n));
+// 	double *top = (double *) malloc (sizeof (double) * n);
+// 	double *denom = (double *) malloc (sizeof (double) * n);
+// 	double numerator = 0.0;
+// 	double denominator = 0.0;
+
+// 	/* Calculate A matrix_transpose */
+// 	for (i = 0; i < (n * n); i++) 
+// 	{
+// 		at[i] = a[i];
+// 	}
+// 	matrix_transpose(at, n);
+
+// 	/* Calculate At * (Ax - b) */
+// 	matrix_vector(at, Ax_b, top, n);
+
+// 	/* Calculate norm squared of At * (Ax - b), i.e. numerator */
+// 	for (i = 0; i < n; i++) 
+// 	{
+// 		numerator += top[i] * top[i];
+// 	}
+
+// 	matrix_vector(a, top, denom, n);
+
+// 	/* Calculate the norm squared of A*At * (Ax - b), i.e. denominator */
+// 	for (i = 0; i < n; i++) 
+// 	{
+// 		denominator += denom[i] * denom[i];
+// 	}
+
+// 	free (at); free (aat); free (top); free (denom);
+// 	return (numerator / (2.0 * denominator));
+// }
+
+
+//----------------------------------------------------------------------------
+
+double line_search (double *a, double *grad, int n) {
 	int i;
 	double *at = (double *) malloc (sizeof (double) * (n * n));
 	double *aat = (double *) malloc (sizeof (double) * (n * n));
@@ -136,22 +176,22 @@ double line_search (double *a, double *Ax_b, int n) {
 	double denominator = 0.0;
 
 	/* Calculate A matrix_transpose */
-	for (i = 0; i < (n * n); i++) 
-	{
-		at[i] = a[i];
-	}
-	matrix_transpose(at, n);
+	// for (i = 0; i < (n * n); i++) 
+	// {
+	// 	at[i] = a[i];
+	// }
+	// matrix_transpose(at, n);
 
 	/* Calculate At * (Ax - b) */
-	matrix_vector(at, Ax_b, top, n);
+	// matrix_vector(at, Ax_b, top, n);
 
 	/* Calculate norm squared of At * (Ax - b), i.e. numerator */
 	for (i = 0; i < n; i++) 
 	{
-		numerator += top[i] * top[i];
+		numerator += grad[i] * grad[i];
 	}
 
-	matrix_vector(a, top, denom, n);
+	matrix_vector(a, grad, denom, n);
 
 	/* Calculate the norm squared of A*At * (Ax - b), i.e. denominator */
 	for (i = 0; i < n; i++) 
