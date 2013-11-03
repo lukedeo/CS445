@@ -40,21 +40,34 @@ int main(int argc, char const *argv[])
 	int n = atoi(argv[1]);
 	int numit = 10000, niter, i;
 	double eps = 10e-6;
-	double *matrix, *vector, *discreps, *x, *temp;
+	double *matrix, *vector, *discreps, *x, *temp, *x_real;
 	matrix = (double *) malloc (sizeof (double) * (n * n));
 	vector = (double *) malloc (sizeof (double) * n);
 	discreps = (double *) malloc (sizeof (double) * numit);
 	x = (double *) malloc (sizeof (double) * n);
+	x_real = (double *) malloc (sizeof (double) * n);
 	temp = (double *) malloc (sizeof (double) * n);
 
 	pair_gen(matrix, vector, n);
+
+	for (i = 0; i < n; ++i)
+	{
+		x_real[i] = vector[i] / matrix[i * n + i];
+	}
 
 	//solve the system!
 	dumb_solve(matrix, vector, n, eps, numit, x, &niter, discreps);
 
 	//Print the results
+	printf("Original A:");
+	print(matrix, n, n);
+
 	printf("Solution to linear system");
 	print(x, n, 1);
+
+	printf("Analytical Solution to linear system");
+	print(x_real, n, 1);
+
 	printf("Multiply solution by A to see if we get the original vector");
 	general_multiply(matrix, x, temp, n, 1);        
 	print(temp, n, 1);
@@ -62,22 +75,18 @@ int main(int argc, char const *argv[])
 	printf("Discrepancy values:\n");
 	for (i = 0; i < niter; i++) 
 	{
-		if (i == (numit - 1)) 
-		{
-			break;
-		}
-		if (i != 0)
-		{
-			printf(", %.8f", discreps[i]);
-		}
-		else
-		{
-			printf("%.8f", discreps[i]);
-		}
+		// if (i == (numit - 1)) 
+		// {
+		// 	break;
+		// }
+
+		printf("%i, %.8f\n", i, discreps[i]);
 	}
+	printf("\n");
 	free(matrix); 
 	free(vector); 
 	free(discreps); 
+	free(x_real); 
 	free(x); 
 	free(temp);
 	return 0;
@@ -111,7 +120,7 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	//We let the initial guess be the vector of ones
 	for (i = 0; i < n; i++) 
 	{
-		x_n[i] = 1;
+		x_n[i] = 0;
 	}
 
 	for (*niter = 0; (*niter < numit); (*niter)++) 
@@ -140,7 +149,7 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	{
 		x[i] = x_n[i];
 	}
-	free(x_n); 
+	free(x_n);
 	free(Ax); 
 	free(Ax_b);
 	return;
