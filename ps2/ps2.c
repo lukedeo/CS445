@@ -38,8 +38,8 @@ void pair_gen(double *A, double *y, int n);
 int main(int argc, char const *argv[])
 {
 	int n = atoi(argv[1]);
-	int numit = 10000, niter, i;
-	double eps = 10e-6;
+	int numit = 1000, niter, i;
+	double eps = 1e-6;
 	double *matrix, *vector, *discreps, *x, *temp, *x_real;
 	matrix = (double *) malloc (sizeof (double) * (n * n));
 	vector = (double *) malloc (sizeof (double) * n);
@@ -68,7 +68,13 @@ int main(int argc, char const *argv[])
 	printf("Analytical Solution to linear system");
 	print(x_real, n, 1);
 
-	printf("Multiply solution by A to see if we get the original vector");
+	printf("roundoff:\n|a_ii|, error\n");
+	for (i = 0; i < n; i++) 
+	{
+		printf("%.14f, %.14f\n", matrix[i*n+i], fabs(x_real[i] - x[i]));
+	}	
+
+	printf("\nMultiply solution by A to see if we get the original vector");
 	general_multiply(matrix, x, temp, n, 1);        
 	print(temp, n, 1);
 	printf("Number of iterations: %d\n", niter);
@@ -120,7 +126,7 @@ void dumb_solve(double *a, double *y, int n, double eps, int numit, double *x, i
 	//We let the initial guess be the vector of ones
 	for (i = 0; i < n; i++) 
 	{
-		x_n[i] = 1;
+		x_n[i] = 0.0;
 	}
 
 	for (*niter = 0; (*niter < numit); (*niter)++) 
