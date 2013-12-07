@@ -5,6 +5,9 @@
 #include <float.h>
 #include <time.h>
 
+const int BUF = 100000;
+
+
 //----------------------------------------------------------------------------
 typedef struct pair
 {
@@ -89,6 +92,89 @@ void seek_naive(double *a, int n, int k, int *iz)
 	}
 	free(D);
 }
+//----------------------------------------------------------------------------
+// SEEK NAIVE
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+void int_swap(int *a, int *b) 
+{
+	int tmp = *a;
+	*a = *b;
+	*b = tmp;
+	return;
+}
+//----------------------------------------------------------------------------
+
+typedef struct point
+{
+	double x;
+	double y;
+} point;
+
+typedef struct box
+{
+	point b_left;
+	point t_right;
+} box;
+
+typedef struct circle
+{
+	point center;
+	double radius;
+} circle;
+
+typedef struct control_object
+{
+	int is_processed;
+	int start;
+	int end;
+	int parent;
+	int children[4];
+	box Box;
+} control_object;
+//----------------------------------------------------------------------------
+
+
+void add_control_entry(control_object *control, int *permutation, int current, int next, double *a, int n)
+{
+	
+}
+
+//----------------------------------------------------------------------------
+void seek(double *a, int n, int k, int *iz) 
+{
+	int i, j;
+	int *permutation = (int*) malloc(n * sizeof(int));
+	for (i = 0; i < n; i++)
+	{
+		permutation[i] = i;
+	}
+
+	control_object *Control;
+	Control = malloc(BUF * sizeof (control_object));
+
+	Control[0].is_processed = 1, Control[0].start = 0, Control[0].end = n - 1;
+	Control[0].parent = -8, 
+	Control[0].Box.b_left.x = 0, Control[0].Box.b_left.y = 0;
+	Control[0].Box.t_right.x = 1, Control[0].Box.t_right.y = 1;
+
+	int current = 0;
+	int next = 1;
+
+	while(current < next)
+	{
+		int e = Control[current].end;
+		int s = Control[current].start;
+		if (e - s > k)
+		{
+			/* code */
+		}
+	}
+
+}
+
+
 
 //----------------------------------------------------------------------------
 void print_matrix(double *a, int row, int col) 
@@ -137,11 +223,11 @@ int main(int argc, char const *argv[])
 	dist_matrix(D, a, n);
 	seek_naive(a, n, k, iz);
 	printf("a matrix\n");
-	printDoubleMatrix(a, n, 2);
+	print_matrix(a, n, 2);
 	printf("D matrix\n");
-	printDoubleMatrix(D, n, n);
+	print_matrix(D, n, n);
 	printf("iz matrix\n");
-	printMatrix(iz, n, k);
+	print_int_matrix(iz, n, k);
 
 
 
