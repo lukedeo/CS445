@@ -197,12 +197,15 @@ void print_point(point p)
 }
 
 //----------------------------------------------------------------------------
-void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
+void gen_sub_boxes(box X, box *a, box *b, box *c, box *d, int verbose)
 {
-	printf("parent box:\n");
+	if (verbose)
+	{
+		printf("parent box:\n");
 
-	print_point(X.b_left);
-	print_point(X.t_right);
+		print_point(X.b_left);
+		print_point(X.t_right);
+	}
 
 	a->b_left.x = X.b_left.x;
 	a->b_left.y = (X.t_right.y + X.b_left.y) / 2;
@@ -228,18 +231,21 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
 	d->t_right.y = (X.t_right.y + X.b_left.y) / 2;
 	d->t_right.x = X.t_right.x;
 
-	printf("box a:\n");
-	print_point(a->b_left);
-	print_point(a->t_right);
-	printf("box b:\n");
-	print_point(b->b_left);
-	print_point(b->t_right);
-	printf("box c:\n");
-	print_point(c->b_left);
-	print_point(c->t_right);
-	printf("box d:\n");
-	print_point(d->b_left);
-	print_point(d->t_right);
+	if (verbose)
+	{
+		printf("box a:\n");
+		print_point(a->b_left);
+		print_point(a->t_right);
+		printf("box b:\n");
+		print_point(b->b_left);
+		print_point(b->t_right);
+		printf("box c:\n");
+		print_point(c->b_left);
+		print_point(c->t_right);
+		printf("box d:\n");
+		print_point(d->b_left);
+		print_point(d->t_right);
+	}
 
 	a->b_right = c->t_right;
 	a->t_left = X.t_left;
@@ -258,7 +264,7 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
 //----------------------------------------------------------------------------
 
 
-void add_control_entry(control_object *control, int *permutation, int current, int next, point *Data, int n)
+void add_control_entry(control_object *control, int *permutation, int current, int next, point *Data, int n, int verbose)
 {
 	int head = control[current].start;
 	int tail = control[current].end;
@@ -272,7 +278,7 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 	gen_sub_boxes(control[current].Box, &control[next].Box, 
 		                                &control[next + 1].Box, 
 		                                &control[next + 2].Box, 
-		                                &control[next + 3].Box);
+		                                &control[next + 3].Box, verbose);
 	// printf("%s\n", "pass this");
 	
 	// print_point(control[current].Box.b_right);
@@ -380,36 +386,69 @@ int find_leaf_idx(point p, control_object *control)
 	return control[current].parent;
 }
 //----------------------------------------------------------------------------
-void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz)
+void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, int verbose)
 {
-	pair* pairs;
-	pairs = malloc((length - 1) * sizeof(pair));
+	// pair* pairs;
+	// pairs = malloc((length - 1) * sizeof(pair));
+	pair pairs[length];
 	int ix = 0, j;
-	for (j = 0; j < length; ++j)
+	for (j = 0; j < (length); ++j)
 	{
-		if (j == idx)
+		if (points[j] == idx)
 		{
 			continue;
 		}
 		pairs[ix].idx = points[j];
+		// printf("looking at point %d\n", points[j]);
+		// printf("imputing ");
+		// print_point(Data[points[j]]);
 		pairs[ix].value = distance(Data[idx], Data[points[j]]);
 		++ix;
 	}
-	qsort(pairs, length - 1, sizeof(pair), compare);
+	if (verbose)
+	{
+		printf("%s\n", "accumulated distances.");
+	}
+	qsort(pairs, ix, sizeof(pair), compare);
+	if (verbose)
+	{
+		printf("%s\n", "values sorted!");
+	}
 	for (j = 0; j < k; ++j)
 	{
 		iz[idx * k + j] = pairs[j].idx;
+	}
+	if (idx == 17)
+	{
+		getchar();
+		printf("-------------------\n");
+		for (j = 0; j < ix; ++j)
+		{
+			printf("sorted index = %d, value = %f\n", pairs[j].idx, pairs[j].value);
+		}
+		printf("-------------------\n");
+		getchar();
+
+	}
+	if (verbose)
+	{
+		printf("%s\n", "values imputed.");
 	}
 	// free(pairs);
 }
 
 
 //----------------------------------------------------------------------------
-void seek(double *a, int n, int k, int *iz) 
+void seek(double *a, int n, int k, int *iz, int verbose) 
 {
 	point *Data;
 	Data = malloc(n * sizeof(point));
 	arr_to_points(a, Data, n);
+	getchar();
+	print_point(Data[0]);
+	print_point(Data[1]);
+	printf("test distance = %f", distance(Data[0], Data[1]));
+	getchar();
 
 
 	int i, j, l;
@@ -428,8 +467,14 @@ void seek(double *a, int n, int k, int *iz)
 	Control[0].Box.t_left.x = 0, Control[0].Box.t_left.y = 1;
 	Control[0].Box.t_right.x = 1, Control[0].Box.t_right.y = 1;
 	Control[0].Box.b_right.x = 1, Control[0].Box.b_right.y = 0;
-	print_point(Control[0].Box.b_left);
-	print_point(Control[0].Box.t_right);
+	if(verbose)
+	{
+		print_point(Control[0].Box.b_left);
+	}
+	if(verbose)
+	{
+		print_point(Control[0].Box.t_right);
+	}
 
 	int current = 0;
 	int next = 1;
@@ -438,49 +483,98 @@ void seek(double *a, int n, int k, int *iz)
 	{
 		int e = Control[current].end;
 		int s = Control[current].start;
-		printf("-------\ne = %d, s = %d, num in node = %d\n", e, s, e - s + 1);
-		if (((e - s) > k) && (!Control[current].is_processed)) // if there are more than k points at this node.
+		if(verbose)
+		{
+			printf("-------\ne = %d, s = %d, num in node = %d\n", e, s, e - s + 1);
+		}
+		if (((e - s + 1) > k)/* && (!Control[current].is_processed)*/) // if there are more than k points at this node.
 		{	
-			printf("splitting a node!\n");
-			add_control_entry(Control, permutation, current, next, Data, n);
+			if(verbose)
+			{
+				printf("splitting a node!\n");
+			}
+			add_control_entry(Control, permutation, current, next, Data, n, verbose);
 			next += 4;
 		};
 		Control[current].is_processed = 1;
-		// print_point(Control[current].Box.b_left);
-		// print_point(Control[current].Box.t_right);
 		current++;
-		// printf("Hello! current = %d, next = %d, num in node = %d\n", current, next, tot);
 	}
-
+	getchar();
+	printf("where do things start and end?\n");
+	for (i = 0; i < next; ++i)
+	{
+		printf("node %d, starts at %d, ends at %d.\n", i+1, Control[i].start, Control[i].end);
+	}
+	getchar();
 	for (i = 0; i < n; ++i)
 	{
+		if(verbose)
+		{
+			printf("-------------------------\n%s%d\n", "Searching for neighbors of point ", i+1);
+		}
 		int parent_idx = find_leaf_idx(Data[i], Control);
 		circle C;
 		C.center = Data[i];
 		C.radius = get_radius(Data[i], Control[parent_idx].Box);
 
 		int points[BUF];
+		int to_consider[n];
+		for (j = 0; j < n; ++j)
+		{	
+			to_consider[j] = 0;
+		}
+
 		int length = 0;
+		if(verbose)
+		{
+			printf("parent idx = %d, index starts: %d, index ends: %d\n", parent_idx,  Control[parent_idx].start, Control[parent_idx].end);
+			printf("Child indices of: ");
+		}
+		int h;
+		for (h = 0; h < 4; ++h)
+		{
+			if(verbose)
+			{
+				printf("%d  ", Control[parent_idx].children[h]);
+			}
+		}
+
 		for (j = Control[parent_idx].start; j <= Control[parent_idx].end; ++j)
 		{
 			points[length++] = permutation[j];
+			to_consider[permutation[j]] = 1;
 		}
+
+
 		for (j = 0; j < next; ++j)
 		{
-			if (Control[j].children[0] != 0)
+			if ((Control[j].children[0] != 0) ||
+				(Control[j].parent == parent_idx) ||
+				(j == parent_idx))
 			{
 				continue;
 			}
+			if(verbose)
+			{
+				printf("search index j = %d\n", j);
+			}
 			if (intersect(Control[j].Box, C))
 			{
-				for (l = Control[j].start; l <= Control[j].end; ++l)
+				for (l = Control[j].start; l <= Control[j].end; l++)
 				{
-					points[length++] = permutation[l];
+					if (to_consider[permutation[l]] == 0)
+					{
+						points[length++] = permutation[l];
+						to_consider[permutation[k]] = 1;
+					}
 				}
 			}
 		}
-		printf("length is %d\n", length);
-		knn(i, Data, points, length, n, k, iz);
+		if(verbose)
+		{
+			printf("length is %d\n", length);
+		}
+		knn(i, Data, points, length, n, k, iz, verbose);
 	}
 
 }
@@ -495,7 +589,7 @@ void print_matrix(double *a, int row, int col)
 	{
 		for (j = 0; j < col; j++)
 		{
-			printf("%10.4f", a[i*col+j]);
+			printf("%16.10f", a[i*col+j]);
 		}
 		printf("\n");
 	}
@@ -506,7 +600,7 @@ void print_matrix(double *a, int row, int col)
 
 int main(int argc, char const *argv[])
 {
-	int n = 11, i, j, k = 3, *iz;
+	int n = 15, i, j, k = 5, *iz;
 	double *a, *D;
 	a = malloc(2 * n * sizeof(double));
 	D = malloc(n * n * sizeof(double));
@@ -530,13 +624,16 @@ int main(int argc, char const *argv[])
 	// a[12] = .65, a[13] = .15;
 	// a[14] = .65, a[15] = .4;
 	// a[16] = .65, a[17] = .65;
+
+	
 	dist_matrix(D, a, n);
+	print_matrix(a, n, 2);
 	printf("naive seek:\n");
 
 	seek_naive(a, n, k, iz);
 	print_int_matrix(iz, n, k);
 	printf("good seek:\n");
-	seek(a, n, k, iz);
+	seek(a, n, k, iz, 0);
 	print_int_matrix(iz, n, k);
 
 
