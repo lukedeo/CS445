@@ -537,7 +537,7 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 			to_consider[permutation[j]] = 1;
 		}
 		// getchar();
-		print_int_matrix(permutation, 1, n);
+		// print_int_matrix(permutation, 1, n);
 		// getchar();
 
 
@@ -632,14 +632,14 @@ int main(int argc, char const *argv[])
 
 	
 	dist_matrix(D, a, n);
-	print_matrix(a, n, 2);
+	// print_matrix(a, n, 2);
 	printf("naive seek:\n");
 
 	seek_naive(a, n, k, iz);
-	print_int_matrix(iz, n, k);
+	// print_int_matrix(iz, n, k);
 	printf("good seek:\n");
 	seek(a, n, k, iz2, 0);
-	print_int_matrix(iz2, n, k);
+	// print_int_matrix(iz2, n, k);
 	int ctr = 0;
 	for (i = 0; i < n; ++i)
 	{
