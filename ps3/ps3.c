@@ -15,6 +15,14 @@ typedef struct pair
 	double value;
 } pair;
 
+double maximum(double a, double b)
+{
+	if (a >= b)
+	{
+		return a;
+	}
+	return b;
+}
 //----------------------------------------------------------------------------
 int compare (const void * a, const void * b)
 {
@@ -93,7 +101,7 @@ void seek_naive(double *a, int n, int k, int *iz)
 	free(D);
 }
 //----------------------------------------------------------------------------
-// SEEK NAIVE
+// SEEK 
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
@@ -134,6 +142,16 @@ typedef struct control_object
 	box Box;
 } control_object;
 
+//----------------------------------------------------------------------------
+
+double distance(point p, point q)
+{
+	double dx = p.x - q.x;
+	double dy = p.y - q.y;
+	return sqrt(dx * dx + dy * dy);
+}
+
+//----------------------------------------------------------------------------
 int is_in_box(point p, box B)
 {
 	if ((p.x > B.Box.t_right.x) || (p.x < B.Box.b_left.x))
@@ -146,7 +164,7 @@ int is_in_box(point p, box B)
 	}
 	return 1;
 }
-
+//----------------------------------------------------------------------------
 void arr_to_points(double *a, point *points, int n)
 {
 	for (int i = 0; i < n; ++i)
@@ -156,13 +174,13 @@ void arr_to_points(double *a, point *points, int n)
 	}
 }
 
-
+//----------------------------------------------------------------------------
 void print_point(point p)
 {
 	printf("(%f, %f)\n", p.x, p.y);
 }
 
-
+//----------------------------------------------------------------------------
 void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
 {
 	a->b_left.x = X.b_left.x;
@@ -239,6 +257,20 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 }
 
 //----------------------------------------------------------------------------
+double get_radius(point p, box B) 
+{
+	double result = distance(p, B);
+	result = maximum(result, distance(p, B);
+	result = maximum(result, distance(p, B);
+	return maximum(result, distance(p, B);
+}
+
+int intersect(box B, point p, radius r)
+{
+	
+}
+
+//----------------------------------------------------------------------------
 void seek(double *a, int n, int k, int *iz) 
 {
 	point *Data;
@@ -270,12 +302,12 @@ void seek(double *a, int n, int k, int *iz)
 	{
 		int e = Control[current].end;
 		int s = Control[current].start;
-		if (e - s > k)
+		if (e - s > k) // if there are more than k points at this node.
 		{
 			add_control_entry(Control, permutation, current, next, Data, n);
 			next += 4;
 		}
-		Control[current].is_processed;
+		Control[current].is_processed = 1;
 		current++;
 	}
 
@@ -305,6 +337,7 @@ void print_matrix(double *a, int row, int col)
 	}
 	return;
 }
+//----------------------------------------------------------------------------
 void print_int_matrix(int *a, int row, int col) 
 {
 	int i, j;
@@ -318,6 +351,7 @@ void print_int_matrix(int *a, int row, int col)
 	}
 	return;
 }
+//----------------------------------------------------------------------------
 
 int main(int argc, char const *argv[])
 {
