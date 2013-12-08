@@ -534,22 +534,30 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 		if(verbose)
 		{
 			printf("parent idx = %d, index starts: %d, index ends: %d\n", parent_idx,  Control[parent_idx].start, Control[parent_idx].end);
-			printf("Child indices of: ");
+			// printf("Child indices of: ");
 		}
 		int h;
-		for (h = 0; h < 4; ++h)
-		{
-			if(verbose)
-			{
-				printf("%d  ", Control[parent_idx].children[h]);
-			}
-		}
-
+		// for (h = 0; h < 4; ++h)
+		// {
+		// 	if(verbose)
+		// 	{
+		// 		printf("%d  ", Control[parent_idx].children[h]);
+		// 	}
+		// }
+		printf("we've considered points:\n");
 		for (j = Control[parent_idx].start; j <= Control[parent_idx].end; ++j)
 		{
 			points[length++] = permutation[j];
+
+			if (verbose)
+			{
+				printf("id: %d\n", permutation[j]);
+			}
 			to_consider[permutation[j]] = 1;
 		}
+		// getchar();
+		print_int_matrix(permutation, 1, n);
+		// getchar();
 
 
 		for (j = 0; j < next; ++j)
@@ -560,18 +568,23 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 			{
 				continue;
 			}
-			if(verbose)
-			{
-				printf("search index j = %d\n", j);
-			}
+			// if(verbose)
+			// {
+			// 	printf("search index j = %d\n", j);
+			// }
 			if (intersect(Control[j].Box, C))
 			{
 				for (l = Control[j].start; l <= Control[j].end; l++)
 				{
 					if (to_consider[permutation[l]] == 0)
 					{
+						if (verbose)
+						{
+							printf("id: %d\n", permutation[l]);
+						}
+						
 						points[length++] = permutation[l];
-						to_consider[permutation[k]] = 1;
+						to_consider[permutation[l]] = 1;
 					}
 				}
 			}
@@ -615,6 +628,7 @@ int main(int argc, char const *argv[])
 	D = malloc(n * n * sizeof(double));
 	iz = malloc(n * k * sizeof(int));
 	iz2 = malloc(n * k * sizeof(int));
+	srand (99);
 
 
 	for (i = 0; i < n; ++i)
@@ -643,7 +657,7 @@ int main(int argc, char const *argv[])
 	seek_naive(a, n, k, iz);
 	print_int_matrix(iz, n, k);
 	printf("good seek:\n");
-	seek(a, n, k, iz2, 0);
+	seek(a, n, k, iz2, 1);
 	print_int_matrix(iz2, n, k);
 	int ctr = 0;
 	for (i = 0; i < n; ++i)
