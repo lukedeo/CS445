@@ -327,9 +327,9 @@ double get_radius(point p, box B)
 int intersect(box B, circle C)
 {
 	if ((distance(B.t_right, C.center) < C.radius) || 
-		(distance(B.t_left, C.center) < C.radius) ||
-		(distance(B.b_right, C.center) < C.radius) ||
-		(distance(B.b_left, C.center) < C.radius))
+        (distance(B.t_left, C.center) < C.radius) ||
+        (distance(B.b_right, C.center) < C.radius) ||
+        (distance(B.b_left, C.center) < C.radius))
 	{
 		return 1;
 	}
