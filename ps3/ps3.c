@@ -414,20 +414,6 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 	{
 		iz[idx * k + j] = pairs[j].idx;
 	}
-	if (idx == 11)
-	{
-		getchar();
-		printf("-------------------\n");
-		for (j = 0; j < ix; ++j)
-		{
-			printf("sorted index = %d, value = %f\n", pairs[j].idx, pairs[j].value);
-			print_point(Data[idx]);
-			print_point(Data[pairs[j].idx]);
-		}
-		printf("-------------------\n");
-		getchar();
-
-	}
 	if (verbose)
 	{
 		printf("%s\n", "values imputed.");
@@ -442,11 +428,11 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 	point *Data;
 	Data = malloc(n * sizeof(point));
 	arr_to_points(a, Data, n);
-	getchar();
-	print_point(Data[0]);
-	print_point(Data[1]);
-	printf("test distance = %f", distance(Data[0], Data[1]));
-	getchar();
+	// getchar();
+	// print_point(Data[0]);
+	// print_point(Data[1]);
+	// printf("test distance = %f", distance(Data[0], Data[1]));
+	// getchar();
 
 
 	int i, j, l;
@@ -497,23 +483,18 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 		Control[current].is_processed = 1;
 		current++;
 	}
-	getchar();
-	printf("where do things start and end?\n");
-	// for (i = 0; i < next; ++i)
-	// {
-	// 	printf("node %d, starts at %d, ends at %d.\n", i+1, Control[i].start, Control[i].end);
-	// }
-	getchar();
+	if (verbose)
+	{
+		getchar();
+		printf("where do things start and end?\n");
+		// for (i = 0; i < next; ++i)
+		// {
+		// 	printf("node %d, starts at %d, ends at %d.\n", i+1, Control[i].start, Control[i].end);
+		// }
+		getchar();
+	}
 	for (i = 0; i < n; ++i)
 	{
-		if (i == 11)
-		{
-			verbose = 1;
-		}
-		else
-		{
-			verbose = 0;
-		}
 		if(verbose)
 		{
 			printf("-------------------------\n%s%d\n", "Searching for neighbors of point ", i+1);
@@ -535,6 +516,7 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 		{
 			printf("parent idx = %d, index starts: %d, index ends: %d\n", parent_idx,  Control[parent_idx].start, Control[parent_idx].end);
 			// printf("Child indices of: ");
+			printf("we've considered points:\n");
 		}
 		int h;
 		// for (h = 0; h < 4; ++h)
@@ -544,7 +526,7 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 		// 		printf("%d  ", Control[parent_idx].children[h]);
 		// 	}
 		// }
-		printf("we've considered points:\n");
+		
 		for (j = Control[parent_idx].start; j <= Control[parent_idx].end; ++j)
 		{
 			points[length++] = permutation[j];
@@ -657,7 +639,7 @@ int main(int argc, char const *argv[])
 	seek_naive(a, n, k, iz);
 	print_int_matrix(iz, n, k);
 	printf("good seek:\n");
-	seek(a, n, k, iz2, 1);
+	seek(a, n, k, iz2, 0);
 	print_int_matrix(iz2, n, k);
 	int ctr = 0;
 	for (i = 0; i < n; ++i)
