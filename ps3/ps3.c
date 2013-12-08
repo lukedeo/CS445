@@ -510,7 +510,6 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 		{	
 			to_consider[j] = 0;
 		}
-
 		int length = 0;
 		if(verbose)
 		{
