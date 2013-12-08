@@ -316,10 +316,93 @@ double get_radius(point p, box B)
 	return maximum(result, distance(p, B.t_left));
 }
 
+
+
 int intersect(box B, circle C)
 {
-
+	if ((distance(B.t_right, C.center) < C.radius) || 
+		(distance(B.t_right, C.center) < C.radius) ||
+		(distance(B.t_right, C.center) < C.radius) ||
+		(distance(B.t_right, C.center) < C.radius))
+	{
+		return 1;
+	}
+	point p = C.center;
+	p.y += C.radius;
+	if (is_in_box(p, B))
+	{
+		return 1;
+	}
+	p.y -= 2 * C.radius;
+	if (is_in_box(p, B))
+	{
+		return 1;
+	}
+	p.y += C.radius;
+	p.x += C.radius;
+	if (is_in_box(p, B))
+	{
+		return 1;
+	}
+	p.x -= 2 * C.radius;
+	if (is_in_box(p, B))
+	{
+		return 1;
+	}
+	return 0;	
 }
+//----------------------------------------------------------------------------
+
+int find_leaf_idx(point p, control_object *control)
+{
+	int current = 0, i, j;
+	int leaf_idx = control[0].children[0];
+	while(leaf_idx != 0)
+	{
+		if (is_in_box(p, control[leaf_idx].Box))
+		{
+			current = leaf_idx;
+		}
+		else if (is_in_box(p, control[leaf_idx + 1].Box))
+		{
+			current = leaf_idx + 1;
+		}
+		else if (is_in_box(p, control[leaf_idx + 2].Box))
+		{
+			current = leaf_idx + 2;
+		}
+		else
+		{
+			current = leaf_idx + 3;
+		}
+		leaf_idx = control[current].children[0];
+	}
+	return control[current].parent;
+}
+//----------------------------------------------------------------------------
+void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz)
+{
+	pair* pairs;
+	pairs = malloc((length - 1) * sizeof(pair));
+	int ix = 0, j;
+	for (j = 0; j < length; ++j)
+	{
+		if (j == idx)
+		{
+			continue;
+		}
+		pairs[ix].idx = j;
+		pairs[ix].value = distance(Data[idx], Data[j]);
+		++ix;
+	}
+	qsort(pairs, length - 1, sizeof(pair), compare);
+	for (j = 0; j < k; ++j)
+	{
+		iz[idx * k + j] = pairs[j].idx;
+	}
+	// free(pairs);
+}
+
 
 //----------------------------------------------------------------------------
 void seek(double *a, int n, int k, int *iz) 
@@ -329,7 +412,7 @@ void seek(double *a, int n, int k, int *iz)
 	arr_to_points(a, Data, n);
 
 
-	int i, j;
+	int i, j, l;
 	int *permutation = (int*) malloc(n * sizeof(int));
 	for (i = 0; i < n; i++)
 	{
@@ -356,21 +439,49 @@ void seek(double *a, int n, int k, int *iz)
 		int e = Control[current].end;
 		int s = Control[current].start;
 		printf("-------\ne = %d, s = %d, num in node = %d\n", e, s, e - s + 1);
-		if (((e - s + 1) > k) && (!Control[current].is_processed)) // if there are more than k points at this node.
+		if (((e - s) > k) && (!Control[current].is_processed)) // if there are more than k points at this node.
 		{	
 			printf("splitting a node!\n");
 			add_control_entry(Control, permutation, current, next, Data, n);
 			next += 4;
 		};
 		Control[current].is_processed = 1;
-		print_point(Control[current].Box.b_left);
-		print_point(Control[current].Box.t_right);
+		// print_point(Control[current].Box.b_left);
+		// print_point(Control[current].Box.t_right);
 		current++;
 		// printf("Hello! current = %d, next = %d, num in node = %d\n", current, next, tot);
 	}
-	int idx = Control[current].parent;
-	print_int_matrix(permutation, 1, n);
 
+	for (i = 0; i < n; ++i)
+	{
+		int parent_idx = find_leaf_idx(Data[i], Control);
+		circle C;
+		C.center = Data[i];
+		C.radius = get_radius(Data[i], Control[parent_idx].Box);
+
+		int points[BUF];
+		int length = 0;
+		for (j = Control[parent_idx].start; j <= Control[parent_idx].end; ++j)
+		{
+			points[length++] = permutation[j];
+		}
+		for (j = 0; j < next; ++j)
+		{
+			if (Control[j].children[0] != 0)
+			{
+				continue;
+			}
+			if (intersect(Control[j].Box, C))
+			{
+				for (l = Control[j].start; l <= Control[j].end; ++l)
+				{
+					points[length++] = permutation[l];
+				}
+			}
+		}
+		printf("length is %d\n", length);
+		knn(i, Data, points, length, n, k, iz);
+	}
 
 }
 
@@ -395,7 +506,7 @@ void print_matrix(double *a, int row, int col)
 
 int main(int argc, char const *argv[])
 {
-	int n = 50, i, j, k = 6, *iz;
+	int n = 11, i, j, k = 3, *iz;
 	double *a, *D;
 	a = malloc(2 * n * sizeof(double));
 	D = malloc(n * n * sizeof(double));
@@ -421,14 +532,11 @@ int main(int argc, char const *argv[])
 	// a[16] = .65, a[17] = .65;
 	dist_matrix(D, a, n);
 	printf("naive seek:\n");
+
 	seek_naive(a, n, k, iz);
+	print_int_matrix(iz, n, k);
 	printf("good seek:\n");
 	seek(a, n, k, iz);
-	printf("a matrix\n");
-	print_matrix(a, n, 2);
-	printf("D matrix\n");
-	print_matrix(D, n, n);
-	printf("iz matrix\n");
 	print_int_matrix(iz, n, k);
 
 
