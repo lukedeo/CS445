@@ -5,6 +5,11 @@
 #include <float.h>
 #include <time.h>
 
+
+
+//-----------------------------------------------------------------------------
+//	Naive Seek
+//-----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 void print_int_matrix(int *a, int row, int col) 
 {
@@ -115,9 +120,11 @@ void seek_naive(double *a, int n, int k, int *iz)
 	}
 	free(D);
 }
-//----------------------------------------------------------------------------
-// SEEK 
-//----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+//	nihilist seek
+//-----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 void int_swap(int *a, int *b) 
@@ -163,7 +170,7 @@ double distance(point p, point q)
 {
 	double dx = p.x - q.x;
 	double dy = p.y - q.y;
-	return sqrt(dx * dx + dy * dy);
+	return sqrt((dx * dx) + (dy * dy));
 }
 
 //----------------------------------------------------------------------------
@@ -279,12 +286,6 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 		                                &control[next + 1].Box, 
 		                                &control[next + 2].Box, 
 		                                &control[next + 3].Box, verbose);
-	// printf("%s\n", "pass this");
-	
-	// print_point(control[current].Box.b_right);
-	
-	// print_point(control[current].Box.t_left);
-	// getchar();
 
 	int count = 0;
 
@@ -292,7 +293,6 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 	{
 		int s = head;
 		int e = tail;
-		// printf("head = %d, tail = %d\n", s, e);
 		while(s <= e)
 		{
 			if (is_in_box(Data[permutation[s]], control[next+count].Box))
@@ -304,7 +304,6 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 				int_swap(&permutation[s], &permutation[e]);
 				e--;
 			}
-			// printf("Here... s = %d, e = \n");
 		}
 		control[next+count].start = head;
 		control[next+count].end = s - 1;
@@ -327,9 +326,9 @@ double get_radius(point p, box B)
 int intersect(box B, circle C)
 {
 	if ((distance(B.t_right, C.center) < C.radius) || 
-        (distance(B.t_left, C.center) < C.radius) ||
-        (distance(B.b_right, C.center) < C.radius) ||
-        (distance(B.b_left, C.center) < C.radius))
+		(distance(B.t_left, C.center) < C.radius) ||
+		(distance(B.b_right, C.center) < C.radius) ||
+		(distance(B.b_left, C.center) < C.radius))
 	{
 		return 1;
 	}
@@ -399,9 +398,6 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 			continue;
 		}
 		pairs[ix].idx = points[j];
-		// printf("looking at point %d\n", points[j]);
-		// printf("imputing ");
-		// print_point(Data[points[j]]);
 		pairs[ix].value = distance(Data[idx], Data[points[j]]);
 		++ix;
 	}
@@ -418,7 +414,7 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 	{
 		iz[idx * k + j] = pairs[j].idx;
 	}
-	if (idx == 3)
+	if (idx == 11)
 	{
 		getchar();
 		printf("-------------------\n");
@@ -510,6 +506,14 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 	getchar();
 	for (i = 0; i < n; ++i)
 	{
+		if (i == 11)
+		{
+			verbose = 1;
+		}
+		else
+		{
+			verbose = 0;
+		}
 		if(verbose)
 		{
 			printf("-------------------------\n%s%d\n", "Searching for neighbors of point ", i+1);
@@ -577,8 +581,11 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 			printf("length is %d\n", length);
 		}
 		knn(i, Data, points, length, n, k, iz, verbose);
-	}
 
+	}
+	free(Data);
+	free(permutation);
+	free(Control);
 }
 
 
