@@ -418,13 +418,17 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 	{
 		iz[idx * k + j] = pairs[j].idx;
 	}
-	if (idx == 17)
+	if (idx == 3)
 	{
 		getchar();
 		printf("-------------------\n");
 		for (j = 0; j < ix; ++j)
 		{
 			printf("sorted index = %d, value = %f\n", pairs[j].idx, pairs[j].value);
+			print_point(Data[idx]);
+			print_point(Data[pairs[j].idx]);
+
+			
 		}
 		printf("-------------------\n");
 		getchar();
@@ -637,20 +641,22 @@ int main(int argc, char const *argv[])
 	printf("good seek:\n");
 	seek(a, n, k, iz2, 0);
 	print_int_matrix(iz2, n, k);
-
+	int ctr = 0;
 	for (i = 0; i < n; ++i)
 	{
 		int ok = 1;
+		ctr = 0;
 		for (j = 0; j < k; ++j)
 		{
 			if (iz[i * k + j] != iz2[i * k + j])
 			{
 				ok = 0;
+				++ctr;
 			}
 		}
 		if (!ok)
 		{
-			printf("row %d, col %d not ok.\n", i, j);
+			printf("row %d, %d elements not ok.\n", i, ctr);
 		}
 	}
 
