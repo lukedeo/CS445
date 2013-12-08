@@ -391,8 +391,8 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz)
 		{
 			continue;
 		}
-		pairs[ix].idx = j;
-		pairs[ix].value = distance(Data[idx], Data[j]);
+		pairs[ix].idx = points[j];
+		pairs[ix].value = distance(Data[idx], Data[points[j]]);
 		++ix;
 	}
 	qsort(pairs, length - 1, sizeof(pair), compare);
