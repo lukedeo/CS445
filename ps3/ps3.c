@@ -254,7 +254,7 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d, int verbose)
 	b->t_left = a->t_right;
 
 	c->b_right = d->b_left;
-	c->t_left = a->b_right; 
+	c->t_left = a->b_left; 
 
 	d->b_right = X.b_right;
 	d->t_left = b->b_left;
@@ -284,7 +284,7 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 	// print_point(control[current].Box.b_right);
 	
 	// print_point(control[current].Box.t_left);
-	getchar();
+	// getchar();
 
 	int count = 0;
 
@@ -388,9 +388,9 @@ int find_leaf_idx(point p, control_object *control)
 //----------------------------------------------------------------------------
 void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, int verbose)
 {
-	// pair* pairs;
-	// pairs = malloc((length - 1) * sizeof(pair));
-	pair pairs[length];
+	pair* pairs;
+	pairs = malloc((length) * sizeof(pair));
+	// pair pairs[length];
 	int ix = 0, j;
 	for (j = 0; j < (length); ++j)
 	{
@@ -434,7 +434,7 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 	{
 		printf("%s\n", "values imputed.");
 	}
-	// free(pairs);
+	free(pairs);
 }
 
 
@@ -600,18 +600,20 @@ void print_matrix(double *a, int row, int col)
 
 int main(int argc, char const *argv[])
 {
-	int n = 15, i, j, k = 5, *iz;
+	int n = 20, i, j, k = 10, *iz, *iz2;
 	double *a, *D;
 	a = malloc(2 * n * sizeof(double));
 	D = malloc(n * n * sizeof(double));
 	iz = malloc(n * k * sizeof(int));
+	iz2 = malloc(n * k * sizeof(int));
 
 
 	for (i = 0; i < n; ++i)
 	{
 		for (j = 0; j < 2; ++j)
 		{
-			a[i * 2 + j] = (double)rand()/(double)RAND_MAX;
+			a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
+			a[i * 2 + j] *= a[i * 2 + j];
 		}
 	}
 
@@ -633,8 +635,24 @@ int main(int argc, char const *argv[])
 	seek_naive(a, n, k, iz);
 	print_int_matrix(iz, n, k);
 	printf("good seek:\n");
-	seek(a, n, k, iz, 0);
-	print_int_matrix(iz, n, k);
+	seek(a, n, k, iz2, 0);
+	print_int_matrix(iz2, n, k);
+
+	for (i = 0; i < n; ++i)
+	{
+		int ok = 1;
+		for (j = 0; j < k; ++j)
+		{
+			if (iz[i * k + j] != iz2[i * k + j])
+			{
+				ok = 0;
+			}
+		}
+		if (!ok)
+		{
+			printf("row %d, col %d not ok.\n", i, j);
+		}
+	}
 
 
 
