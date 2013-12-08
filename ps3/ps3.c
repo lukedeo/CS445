@@ -327,9 +327,9 @@ double get_radius(point p, box B)
 int intersect(box B, circle C)
 {
 	if ((distance(B.t_right, C.center) < C.radius) || 
-		(distance(B.t_right, C.center) < C.radius) ||
-		(distance(B.t_right, C.center) < C.radius) ||
-		(distance(B.t_right, C.center) < C.radius))
+		(distance(B.t_left, C.center) < C.radius) ||
+		(distance(B.b_right, C.center) < C.radius) ||
+		(distance(B.b_left, C.center) < C.radius))
 	{
 		return 1;
 	}
@@ -427,8 +427,6 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 			printf("sorted index = %d, value = %f\n", pairs[j].idx, pairs[j].value);
 			print_point(Data[idx]);
 			print_point(Data[pairs[j].idx]);
-
-			
 		}
 		printf("-------------------\n");
 		getchar();
@@ -505,10 +503,10 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 	}
 	getchar();
 	printf("where do things start and end?\n");
-	for (i = 0; i < next; ++i)
-	{
-		printf("node %d, starts at %d, ends at %d.\n", i+1, Control[i].start, Control[i].end);
-	}
+	// for (i = 0; i < next; ++i)
+	// {
+	// 	printf("node %d, starts at %d, ends at %d.\n", i+1, Control[i].start, Control[i].end);
+	// }
 	getchar();
 	for (i = 0; i < n; ++i)
 	{
@@ -604,7 +602,7 @@ void print_matrix(double *a, int row, int col)
 
 int main(int argc, char const *argv[])
 {
-	int n = 20, i, j, k = 10, *iz, *iz2;
+	int n = atoi(argv[1]), i, j, k = atoi(argv[2]), *iz, *iz2;
 	double *a, *D;
 	a = malloc(2 * n * sizeof(double));
 	D = malloc(n * n * sizeof(double));
@@ -617,7 +615,6 @@ int main(int argc, char const *argv[])
 		for (j = 0; j < 2; ++j)
 		{
 			a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
-			a[i * 2 + j] *= a[i * 2 + j];
 		}
 	}
 
@@ -659,6 +656,12 @@ int main(int argc, char const *argv[])
 			printf("row %d, %d elements not ok.\n", i, ctr);
 		}
 	}
+	// print_matrix(a, n, 2);
+	free(a);
+	free(D);
+	free(iz);
+	free(iz2);
+
 
 
 
