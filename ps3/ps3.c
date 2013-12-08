@@ -5,7 +5,22 @@
 #include <float.h>
 #include <time.h>
 
-const int BUF = 100000;
+//----------------------------------------------------------------------------
+void print_int_matrix(int *a, int row, int col) 
+{
+	int i, j;
+	for (i = 0; i < row; ++i) 
+	{
+		for (j = 0; j < col; ++j)
+		{
+			printf("%d\t", a[i*col+j]);		
+		}
+		printf("\n");
+	}
+	return;
+}
+
+const int BUF = 1000000;
 
 
 //----------------------------------------------------------------------------
@@ -122,8 +137,8 @@ typedef struct point
 
 typedef struct box
 {
-	point b_left;
-	point t_right;
+	point b_left, b_right;
+	point t_left, t_right;
 } box;
 
 typedef struct circle
@@ -154,11 +169,11 @@ double distance(point p, point q)
 //----------------------------------------------------------------------------
 int is_in_box(point p, box B)
 {
-	if ((p.x > B.Box.t_right.x) || (p.x < B.Box.b_left.x))
+	if ((p.x > B.t_right.x) || (p.x < B.b_left.x))
 	{
 		return 0;
 	}
-	if ((p.y > B.Box.t_right.y) || (p.y < B.Box.b_left.y))
+	if ((p.y > B.t_right.y) || (p.y < B.b_left.y))
 	{
 		return 0;
 	}
@@ -167,7 +182,8 @@ int is_in_box(point p, box B)
 //----------------------------------------------------------------------------
 void arr_to_points(double *a, point *points, int n)
 {
-	for (int i = 0; i < n; ++i)
+	int i;
+	for (i = 0; i < n; ++i)
 	{
 		points[i].x = a[2 * i];
 		points[i].y = a[2 * i + 1];
@@ -183,18 +199,22 @@ void print_point(point p)
 //----------------------------------------------------------------------------
 void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
 {
+	printf("parent box:\n");
+
+	print_point(X.b_left);
+	print_point(X.t_right);
+
 	a->b_left.x = X.b_left.x;
-	a->b_left.y = (X.t_right.y - X.b_left.y) / 2;
+	a->b_left.y = (X.t_right.y + X.b_left.y) / 2;
 
 	a->t_right.y = X.t_right.y;
-	a->t_right.x = (X.t_right.x - X.b_left.x) / 2;
+	a->t_right.x = (X.t_right.x + X.b_left.x) / 2;
 
-	b->b_left.x = (X.t_right.x - X.b_left.x) / 2;
-	b->b_left.y = (X.t_right.y - X.b_left.y) / 2;
+	b->b_left.x = (X.t_right.x + X.b_left.x) / 2;
+	b->b_left.y = (X.t_right.y + X.b_left.y) / 2;
 
 	b->t_right.y = X.t_right.y;
 	b->t_right.x = X.t_right.x;
-
 
 	c->b_left.x = X.b_left.x;
 	c->b_left.y = X.b_left.y;
@@ -202,11 +222,36 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
 	c->t_right.y = b->b_left.y;
 	c->t_right.x = b->b_left.x;
 
-	d->b_left.x = (X.t_right.x - X.b_left.x) / 2;
+	d->b_left.x = (X.t_right.x + X.b_left.x) / 2;
 	d->b_left.y = X.b_left.y;
 
-	d->t_right.y = (X.t_right.y - X.b_left.y) / 2;
+	d->t_right.y = (X.t_right.y + X.b_left.y) / 2;
 	d->t_right.x = X.t_right.x;
+
+	printf("box a:\n");
+	print_point(a->b_left);
+	print_point(a->t_right);
+	printf("box b:\n");
+	print_point(b->b_left);
+	print_point(b->t_right);
+	printf("box c:\n");
+	print_point(c->b_left);
+	print_point(c->t_right);
+	printf("box d:\n");
+	print_point(d->b_left);
+	print_point(d->t_right);
+
+	a->b_right = c->t_right;
+	a->t_left = X.t_left;
+
+	b->b_right = d->t_left;
+	b->t_left = a->t_right;
+
+	c->b_right = d->b_left;
+	c->t_left = a->b_right; 
+
+	d->b_right = X.b_right;
+	d->t_left = b->b_left;
 }
 
 
@@ -228,9 +273,12 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 		                                &control[next + 1].Box, 
 		                                &control[next + 2].Box, 
 		                                &control[next + 3].Box);
-	printf("%s\n", "parent box:");
-	print_point(control[current].Box.b_left);
-	print_point(control[current].Box.t_right);
+	// printf("%s\n", "pass this");
+	
+	// print_point(control[current].Box.b_right);
+	
+	// print_point(control[current].Box.t_left);
+	getchar();
 
 	int count = 0;
 
@@ -238,6 +286,7 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 	{
 		int s = head;
 		int e = tail;
+		// printf("head = %d, tail = %d\n", s, e);
 		while(s <= e)
 		{
 			if (is_in_box(Data[permutation[s]], control[next+count].Box))
@@ -247,7 +296,9 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 			else
 			{
 				int_swap(&permutation[s], &permutation[e]);
+				e--;
 			}
+			// printf("Here... s = %d, e = \n");
 		}
 		control[next+count].start = head;
 		control[next+count].end = s - 1;
@@ -259,15 +310,15 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 //----------------------------------------------------------------------------
 double get_radius(point p, box B) 
 {
-	double result = distance(p, B);
-	result = maximum(result, distance(p, B);
-	result = maximum(result, distance(p, B);
-	return maximum(result, distance(p, B);
+	double result = distance(p, B.b_left);
+	result = maximum(result, distance(p, B.b_right));
+	result = maximum(result, distance(p, B.t_right));
+	return maximum(result, distance(p, B.t_left));
 }
 
-int intersect(box B, point p, radius r)
+int intersect(box B, circle C)
 {
-	
+
 }
 
 //----------------------------------------------------------------------------
@@ -287,37 +338,39 @@ void seek(double *a, int n, int k, int *iz)
 
 	control_object *Control;
 	Control = malloc(BUF * sizeof (control_object));
-	int current = 0;
-	Control[0].is_processed = 3, Control[0].start = 0, Control[0].end = n - 1;
+	
+	Control[0].is_processed = 0, Control[0].start = 0, Control[0].end = (n - 1);
 	Control[0].parent = -8, 
 	Control[0].Box.b_left.x = 0, Control[0].Box.b_left.y = 0;
+	Control[0].Box.t_left.x = 0, Control[0].Box.t_left.y = 1;
 	Control[0].Box.t_right.x = 1, Control[0].Box.t_right.y = 1;
-	print_point(Control[current].Box.b_left);
-	print_point(Control[current].Box.t_right);
+	Control[0].Box.b_right.x = 1, Control[0].Box.b_right.y = 0;
+	print_point(Control[0].Box.b_left);
+	print_point(Control[0].Box.t_right);
 
-	
+	int current = 0;
 	int next = 1;
 
 	while(current < next)
 	{
 		int e = Control[current].end;
 		int s = Control[current].start;
-		if (e - s > k) // if there are more than k points at this node.
-		{
+		printf("-------\ne = %d, s = %d, num in node = %d\n", e, s, e - s + 1);
+		if (((e - s + 1) > k) && (!Control[current].is_processed)) // if there are more than k points at this node.
+		{	
+			printf("splitting a node!\n");
 			add_control_entry(Control, permutation, current, next, Data, n);
 			next += 4;
-		}
+		};
 		Control[current].is_processed = 1;
+		print_point(Control[current].Box.b_left);
+		print_point(Control[current].Box.t_right);
 		current++;
+		// printf("Hello! current = %d, next = %d, num in node = %d\n", current, next, tot);
 	}
+	int idx = Control[current].parent;
+	print_int_matrix(permutation, 1, n);
 
-
-	for (i = 0; i < 4; ++i)
-	{
-		printf("\nChild box #%d:\n", i+1);
-		print_point(Control[next+i].Box.b_left);
-		print_point(Control[next+i].Box.t_right);
-	}
 
 }
 
@@ -337,25 +390,12 @@ void print_matrix(double *a, int row, int col)
 	}
 	return;
 }
-//----------------------------------------------------------------------------
-void print_int_matrix(int *a, int row, int col) 
-{
-	int i, j;
-	for (i = 0; i < row; ++i) 
-	{
-		for (j = 0; j < col; ++j)
-		{
-			printf("%d\t", a[i*col+j]);		
-		}
-		printf("\n");
-	}
-	return;
-}
+
 //----------------------------------------------------------------------------
 
 int main(int argc, char const *argv[])
 {
-	int n = 5, i, j, k = 3, *iz;
+	int n = 50, i, j, k = 6, *iz;
 	double *a, *D;
 	a = malloc(2 * n * sizeof(double));
 	D = malloc(n * n * sizeof(double));
@@ -366,11 +406,23 @@ int main(int argc, char const *argv[])
 	{
 		for (j = 0; j < 2; ++j)
 		{
-			a[i * 2 + j] = i / (j + 1) *( j + 1) + 1;
+			a[i * 2 + j] = (double)rand()/(double)RAND_MAX;
 		}
 	}
+
+	// a[0] = .15, a[1] = .15;
+	// a[2] = .15, a[3] = .4;
+	// a[4] = .15, a[5] = .65;
+	// a[6] = .4, a[7] = .15;
+	// a[8] = .4, a[9] = .4;
+	// a[10] = .4, a[11] = .65;
+	// a[12] = .65, a[13] = .15;
+	// a[14] = .65, a[15] = .4;
+	// a[16] = .65, a[17] = .65;
 	dist_matrix(D, a, n);
+	printf("naive seek:\n");
 	seek_naive(a, n, k, iz);
+	printf("good seek:\n");
 	seek(a, n, k, iz);
 	printf("a matrix\n");
 	print_matrix(a, n, 2);
