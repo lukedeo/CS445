@@ -83,7 +83,7 @@ void naive_knn(int idx, point *Data, int n, int k, int *iz);
 void seek_naive(double *a, int n, int k, int *iz);
 
 //functions for seek
-void gen_sub_boxes(box X, box *a, box *b, box *c, box *d);
+void generate_child_boxes(box X, box *a, box *b, box *c, box *d);
 void add_control_entry(control_object *control, int *permutation, 
 					   int current, int next, point *Data, int n);
 int find_parent_idx(point p, control_object *control);
@@ -97,38 +97,38 @@ void seek(double *a, int n, int k, int *iz);
 int main(int argc, char const *argv[])
 {
 
-	int i, j, *iz, n = 1000000, k = 150;
+	// int i, j, *iz, n = 1000, k = 150;
 	
-	double *a;
-	a = (double*) malloc(2 * n * sizeof(double));
-	iz = (int*) malloc(n * k * sizeof(int));
-	srand((unsigned)time(NULL));
+	// double *a;
+	// a = (double*) malloc(2 * n * sizeof(double));
+	// iz = (int*) malloc(n * k * sizeof(int));
+	// srand((unsigned)time(NULL));
 	
-	for (i = 0; i < n; ++i)
-	{
-		for (j = 0; j < 2; ++j)
-		{
-			a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
-		}
-	}
-	seek(a, n, k, iz);
-	printf("\nFinished.\n");
-	free(a);
-	a = NULL;
-	free(iz);
-	iz = NULL;
+	// for (i = 0; i < n; ++i)
+	// {
+	// 	for (j = 0; j < 2; ++j)
+	// 	{
+	// 		a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
+	// 	}
+	// }
+	// seek(a, n, k, iz);
+	// printf("\nFinished.\n");
+	// free(a);
+	// a = NULL;
+	// free(iz);
+	// iz = NULL;
 
 
 	perf_t t;
 	int n = atoi(argv[1]), k = atoi(argv[2]);
-	for (n = 10; n <= 1000; n+=10)
-	{
-		for (k = 1; k <= 2; ++k)
-		{
-			t = test(n, k);
-			print_perf(t);
-		}
-	}
+	// for (n = 10; n <= 1000; n+=10)
+	// {
+	// 	for (k = 1; k <= 2; ++k)
+	// 	{
+	// 		t = test(n, k);
+	// 		print_perf(t);
+	// 	}
+	// }
 	t = test(n, k);
 	print_perf(t);
 
@@ -350,7 +350,7 @@ void seek_naive(double *a, int n, int k, int *iz)
 //-----------------------------------------------------------------------------
 //	Functions for and including the real seek
 //-----------------------------------------------------------------------------
-void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
+void generate_child_boxes(box X, box *a, box *b, box *c, box *d)
 {
 	a->b_left.x = X.b_left.x;
 	a->b_left.y = (X.t_right.y + X.b_left.y) / 2;
@@ -401,7 +401,7 @@ void add_control_entry(control_object *control, int *permutation,
 		control[current].children[i] = next + i;
 		control[next + i].parent = current;
 	}
-	gen_sub_boxes(control[current].Box, &control[next].Box, 
+	generate_child_boxes(control[current].Box, &control[next].Box, 
 		                                &control[next + 1].Box, 
 		                                &control[next + 2].Box, 
 		                                &control[next + 3].Box);
@@ -550,7 +550,7 @@ void seek(double *a, int n, int k, int *iz)
 		int end = Control[current].end;
 		int start = Control[current].start;
 
-		if (((end - start + 1) > k)) // i more than k points at this node.
+		if (((end - start + 1) > k)) // more than k points at this node.
 		{	
 			add_control_entry(Control, permutation, current, next, Data, n);
 			next += 4;
