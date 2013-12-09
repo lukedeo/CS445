@@ -755,68 +755,70 @@ int main(int argc, char const *argv[])
 
 	int n = atoi(argv[1]), i, j, k = atoi(argv[2]), *iz, *iz2;
 	srand(2342342341);
-	double *a, *D;
-	a = malloc(2 * n * sizeof(double));
-	iz = malloc(n * k * sizeof(int));
-	iz2 = malloc(n * k * sizeof(int));
-	// // srand (99);
-	// srand((unsigned)time(NULL));
+	// double *a, *D;
+	// a = malloc(2 * n * sizeof(double));
+	// iz = malloc(n * k * sizeof(int));
+	// iz2 = malloc(n * k * sizeof(int));
+	// // // srand (99);
+	// // srand((unsigned)time(NULL));
 
 
-	for (i = 0; i < n; ++i)
-	{
-		for (j = 0; j < 2; ++j)
-		{
-			a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
-		}
-	}
+	// for (i = 0; i < n; ++i)
+	// {
+	// 	for (j = 0; j < 2; ++j)
+	// 	{
+	// 		a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
+	// 	}
+	// }
 
 
 	
-	// print_matrix(a, n, 2);
-	// getchar();
-	// printf("naive seek:\n");
+	// // print_matrix(a, n, 2);
+	// // getchar();
+	// // printf("naive seek:\n");
 
-	seek_naive(a, n, k, iz);
-	// print_int_matrix(iz, n, k);
-	// printf("good seek:\n");
-	// printf("Theirs:\n");
-	// _seek(a, n, k, iz2);
-	// printf("Mine:\n");
-	seek(a, n, k, iz2, 0);
-	// print_int_matrix(iz2, n, k);
-	int ctr = 0;
-	int ok = 1;
-	int bad = 0;
-	for (i = 0; i < n; ++i)
-	{
-		ok = 1;
-		ctr = 0;
-		for (j = 0; j < k; ++j)
-		{
-			if (iz[i * k + j] != iz2[i * k + j])
-			{
-				ok = 0;
-				bad = 1;
-				++ctr;
-			}
-		}
-		if (ok == 0)
-		{
-			printf("row %d, %d elements not ok.\n", i, ctr);
-		}
-	}
-	// print_matrix(a, n, 2);
-	printf("%d, %d, %d\n", n, k, !bad);
-	free(a);
-	a = NULL;
-	free(iz);
-	iz = NULL;
-	free(iz2);
-	iz2 = NULL;
+	// seek_naive(a, n, k, iz);
+	// // print_int_matrix(iz, n, k);
+	// // printf("good seek:\n");
+	// // printf("Theirs:\n");
+	// // _seek(a, n, k, iz2);
+	// // printf("Mine:\n");
+	// seek(a, n, k, iz2, 0);
+	// // print_int_matrix(iz2, n, k);
+	// int ctr = 0;
+	// int ok = 1;
+	// int bad = 0;
+	// for (i = 0; i < n; ++i)
+	// {
+	// 	ok = 1;
+	// 	ctr = 0;
+	// 	for (j = 0; j < k; ++j)
+	// 	{
+	// 		if (iz[i * k + j] != iz2[i * k + j])
+	// 		{
+	// 			ok = 0;
+	// 			bad = 1;
+	// 			++ctr;
+	// 		}
+	// 	}
+	// 	if (ok == 0)
+	// 	{
+	// 		printf("row %d, %d elements not ok.\n", i, ctr);
+	// 	}
+	// }
+	// // print_matrix(a, n, 2);
+	// printf("%d, %d, %d\n", n, k, !bad);
+	// free(a);
+	// a = NULL;
+	// free(iz);
+	// iz = NULL;
+	// free(iz2);
+	// iz2 = NULL;
 
-	// perf_t t = test(n, k);
-	// print_perf(t);
+	perf_t t = test(n, k);
+	print_perf(t);
+	t = test(n + 100, k + 5);
+	print_perf(t);
 
 
 
