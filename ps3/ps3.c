@@ -84,7 +84,8 @@ void seek_naive(double *a, int n, int k, int *iz);
 
 //functions for seek
 void gen_sub_boxes(box X, box *a, box *b, box *c, box *d);
-void add_control_entry(control_object *control, int *permutation, int current, int next, point *Data, int n);
+void add_control_entry(control_object *control, int *permutation, 
+					   int current, int next, point *Data, int n);
 int find_parent_idx(point p, control_object *control);
 void knn(int idx, point *Data, int points[], int length, int n, int k, int *iz);
 void seek(double *a, int n, int k, int *iz);
@@ -388,7 +389,8 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d)
 	d->t_left = b->b_left;
 }
 //----------------------------------------------------------------------------
-void add_control_entry(control_object *control, int *permutation, int current, int next, point *Data, int n)
+void add_control_entry(control_object *control, int *permutation, 
+					   int current, int next, point *Data, int n)
 {
 	int head = control[current].start;
 	int tail = control[current].end;
@@ -533,7 +535,7 @@ void seek(double *a, int n, int k, int *iz)
 	control_object *Control;
 	Control = (control_object*) malloc(BUFFER * sizeof (control_object));
 	
-	Control[0].is_processed = 0, Control[0].start = 0, Control[0].end = (n - 1);
+	Control[0].is_processed = 0, Control[0].start = 0, Control[0].end = (n-1);
 	Control[0].parent = -8, 
 	Control[0].Box.b_left.x = 0, Control[0].Box.b_left.y = 0;
 	Control[0].Box.t_left.x = 0, Control[0].Box.t_left.y = 1;
@@ -548,7 +550,7 @@ void seek(double *a, int n, int k, int *iz)
 		int end = Control[current].end;
 		int start = Control[current].start;
 
-		if (((end - start + 1) > k)) // if there are more than k points at this node.
+		if (((end - start + 1) > k)) // i more than k points at this node.
 		{	
 			add_control_entry(Control, permutation, current, next, Data, n);
 			next += 4;
