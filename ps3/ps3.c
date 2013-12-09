@@ -1,16 +1,31 @@
+//-----------------------------------------------------------------------------
+//  Yale CPSC 445a, Problem Set 3
+//  Quad-tree k-NN
+//  By: Luke de Oliveira
+//  Yale College `14
+//  12/30/13
+//-----------------------------------------------------------------------------
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
-#include <float.h>
 #include <time.h>
 
+#define BUF 1000000
 
 
 //-----------------------------------------------------------------------------
 //	Naive Seek
 //-----------------------------------------------------------------------------
+
+typedef struct pair
+{
+	int idx;
+	double value;
+} pair;
+
 //----------------------------------------------------------------------------
+
 void print_int_matrix(int *a, int row, int col) 
 {
 	int i, j;
@@ -25,17 +40,39 @@ void print_int_matrix(int *a, int row, int col)
 	return;
 }
 
-const int BUF = 1000000;
+//----------------------------------------------------------------------------
+
+typedef struct point
+{
+	double x;
+	double y;
+} point;
 
 
 //----------------------------------------------------------------------------
-typedef struct pair
-{
-	int idx;
-	double value;
-} pair;
 
-double maximum(double a, double b)
+void arr_to_points(double *a, point *points, int n)
+{
+	int i;
+	for (i = 0; i < n; ++i)
+	{
+		points[i].x = a[2 * i];
+		points[i].y = a[2 * i + 1];
+	}
+}
+
+//----------------------------------------------------------------------------
+
+double distance(point p, point q)
+{
+	double dx = p.x - q.x;
+	double dy = p.y - q.y;
+	return sqrt((dx * dx) + (dy * dy));
+}
+
+//----------------------------------------------------------------------------
+
+double maximum_real(double a, double b)
 {
 	if (a >= b)
 	{
@@ -43,8 +80,10 @@ double maximum(double a, double b)
 	}
 	return b;
 }
+
 //----------------------------------------------------------------------------
-int compare (const void * a, const void * b)
+
+int compare(const void * a, const void * b)
 {
 	if ((*(pair*)a).value > (*(pair*)b).value)
 	{
@@ -61,64 +100,70 @@ int compare (const void * a, const void * b)
 }
 
 //----------------------------------------------------------------------------
-double dist(double x1, double y1, double x2, double y2)
-{
-	double d1 = x1 - x2;
-	double d2 = y1 - y2;
-	return sqrt(d1 * d1 + d2 * d2);
-}
 
+// void naive_knn(double *D, int i, int n, int k, int *iz)
+// {
+// 	pair* pairs;
+// 	pairs = malloc((n - 1) * sizeof(pair));
+// 	int ix = 0, j;
+// 	for (j = 0; j < n; ++j)
+// 	{
+// 		if (j == i)
+// 		{
+// 			continue;
+// 		}
+// 		pairs[ix].idx = j;
+// 		pairs[ix].value = D[i * n + j];
+// 		++ix;
+// 	}
+// 	qsort(pairs, n - 1, sizeof(pair), compare);
+// 	for (j = 0; j < k; ++j)
+// 	{
+// 		iz[i * k + j] = pairs[j].idx;
+// 	}
+// 	free(pairs);
+// 	pairs = NULL;
+// }
 //----------------------------------------------------------------------------
-void dist_matrix(double *D, double *a, int n)
-{
-	int i, j;
-	for (i = 0; i < (n - 1); ++i)
-	{	
-		D[i * n + i] = 0;
-		for (j = (i + 1); j < n; ++j)
-		{
-			D[i * n + j] = dist(a[2 * i], a[2 * i + 1], a[2 * j], a[2 * j + 1]);
-			D[j * n + i] = D[i * n + j];
-		}
-	}
-}
 
-//----------------------------------------------------------------------------
-void naive_knn(double *D, int i, int n, int k, int *iz)
+void naive_knn(int idx, point *Data, int n, int k, int *iz, int verbose)
 {
 	pair* pairs;
-	pairs = malloc((n - 1) * sizeof(pair));
+	pairs = (pair*)malloc((n-1) * sizeof(pair));
 	int ix = 0, j;
-	for (j = 0; j < n; ++j)
+	for (j = 0; j < (n); ++j)
 	{
-		if (j == i)
+		if (j == idx)
 		{
 			continue;
 		}
 		pairs[ix].idx = j;
-		pairs[ix].value = D[i * n + j];
+		pairs[ix].value = distance(Data[idx], Data[j]);
 		++ix;
 	}
 	qsort(pairs, n - 1, sizeof(pair), compare);
 	for (j = 0; j < k; ++j)
 	{
-		iz[i * k + j] = pairs[j].idx;
+		iz[idx * k + j] = pairs[j].idx;
 	}
 	free(pairs);
+	pairs = NULL;
 }
 
 //----------------------------------------------------------------------------
+
 void seek_naive(double *a, int n, int k, int *iz)
 {
 	int i;
-	double *D;
-	D = malloc(n * n * sizeof(double));
-	dist_matrix(D, a, n);
+	point *Data;
+	Data = (point*) malloc(n * sizeof(point));
+	arr_to_points(a, Data, n);
 	for (i = 0; i < n; ++i)
 	{
-		naive_knn(D, i, n, k, iz);
+		naive_knn(i, Data, n, k, iz, 0);
 	}
-	free(D);
+	free(Data);
+	Data = NULL;
 }
 
 
@@ -127,33 +172,27 @@ void seek_naive(double *a, int n, int k, int *iz)
 //-----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
+
 void int_swap(int *a, int *b) 
 {
-	int tmp = *a;
+	int _tmp = *a;
 	*a = *b;
-	*b = tmp;
+	*b = _tmp;
 	return;
 }
 //----------------------------------------------------------------------------
-
-typedef struct point
-{
-	double x;
-	double y;
-} point;
-
 typedef struct box
 {
 	point b_left, b_right;
 	point t_left, t_right;
 } box;
-
+//----------------------------------------------------------------------------
 typedef struct circle
 {
 	point center;
 	double radius;
 } circle;
-
+//----------------------------------------------------------------------------
 typedef struct control_object
 {
 	int is_processed;
@@ -163,17 +202,8 @@ typedef struct control_object
 	int children[4];
 	box Box;
 } control_object;
-
 //----------------------------------------------------------------------------
 
-double distance(point p, point q)
-{
-	double dx = p.x - q.x;
-	double dy = p.y - q.y;
-	return sqrt((dx * dx) + (dy * dy));
-}
-
-//----------------------------------------------------------------------------
 int is_in_box(point p, box B)
 {
 	if ((p.x > B.t_right.x) || (p.x < B.b_left.x))
@@ -186,24 +216,17 @@ int is_in_box(point p, box B)
 	}
 	return 1;
 }
-//----------------------------------------------------------------------------
-void arr_to_points(double *a, point *points, int n)
-{
-	int i;
-	for (i = 0; i < n; ++i)
-	{
-		points[i].x = a[2 * i];
-		points[i].y = a[2 * i + 1];
-	}
-}
+
 
 //----------------------------------------------------------------------------
+
 void print_point(point p)
 {
 	printf("(%f, %f)\n", p.x, p.y);
 }
 
 //----------------------------------------------------------------------------
+
 void gen_sub_boxes(box X, box *a, box *b, box *c, box *d, int verbose)
 {
 	if (verbose)
@@ -211,7 +234,9 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d, int verbose)
 		printf("parent box:\n");
 
 		print_point(X.b_left);
+		print_point(X.b_right);
 		print_point(X.t_right);
+		print_point(X.t_left);
 	}
 
 	a->b_left.x = X.b_left.x;
@@ -238,41 +263,55 @@ void gen_sub_boxes(box X, box *a, box *b, box *c, box *d, int verbose)
 	d->t_right.y = (X.t_right.y + X.b_left.y) / 2;
 	d->t_right.x = X.t_right.x;
 
-	if (verbose)
-	{
-		printf("box a:\n");
-		print_point(a->b_left);
-		print_point(a->t_right);
-		printf("box b:\n");
-		print_point(b->b_left);
-		print_point(b->t_right);
-		printf("box c:\n");
-		print_point(c->b_left);
-		print_point(c->t_right);
-		printf("box d:\n");
-		print_point(d->b_left);
-		print_point(d->t_right);
-	}
+
+
 
 	a->b_right = c->t_right;
 	a->t_left = X.t_left;
 
-	b->b_right = d->t_left;
 	b->t_left = a->t_right;
+	b->b_right = d->t_right;
 
 	c->b_right = d->b_left;
 	c->t_left = a->b_left; 
 
 	d->b_right = X.b_right;
 	d->t_left = b->b_left;
+	
+	if (verbose)
+	{
+		printf("box a:\n----------\n");
+		print_point(a->b_left);
+		print_point(a->b_right);
+		print_point(a->t_right);
+		print_point(a->t_left);
+		printf("box b:\n----------\n");
+		print_point(b->b_left);
+		print_point(b->b_right);
+		print_point(b->t_right);
+		print_point(b->t_left);
+		printf("box c:\n----------\n");
+		print_point(c->b_left);
+		print_point(c->b_right);
+		print_point(c->t_right);
+		print_point(c->t_left);
+		printf("box d:\n----------\n");
+		print_point(d->b_left);
+		print_point(d->b_right);
+		print_point(d->t_right);
+		print_point(d->t_left);
+	}
 }
-
 
 //----------------------------------------------------------------------------
 
-
 void add_control_entry(control_object *control, int *permutation, int current, int next, point *Data, int n, int verbose)
 {
+
+	if (verbose)
+	{
+		printf("looking at current = %d\n", current);
+	}
 	int head = control[current].start;
 	int tail = control[current].end;
 
@@ -305,6 +344,10 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 				e--;
 			}
 		}
+		if (verbose)
+		{
+			printf("start = %d, end = %d\n", s, e);
+		}
 		control[next+count].start = head;
 		control[next+count].end = s - 1;
 		count++;
@@ -316,15 +359,19 @@ void add_control_entry(control_object *control, int *permutation, int current, i
 double get_radius(point p, box B) 
 {
 	double result = distance(p, B.b_left);
-	result = maximum(result, distance(p, B.b_right));
-	result = maximum(result, distance(p, B.t_right));
-	return maximum(result, distance(p, B.t_left));
+	result = maximum_real(result, distance(p, B.b_right));
+	result = maximum_real(result, distance(p, B.t_right));
+	return maximum_real(result, distance(p, B.t_left));
 }
 
 
 
 int intersect(box B, circle C)
 {
+	if (is_in_box(C.center, B))
+	{
+		return 1;
+	}
 	if ((distance(B.t_right, C.center) < C.radius) || 
 		(distance(B.t_left, C.center) < C.radius) ||
 		(distance(B.b_right, C.center) < C.radius) ||
@@ -385,10 +432,10 @@ int find_leaf_idx(point p, control_object *control)
 	return control[current].parent;
 }
 //----------------------------------------------------------------------------
-void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, int verbose)
+void knn(int idx, point *Data, int points[], int length, int n, int k, int *iz, int verbose)
 {
 	pair* pairs;
-	pairs = malloc((length) * sizeof(pair));
+	pairs = (pair*)malloc((length - 1) * sizeof(pair));
 	// pair pairs[length];
 	int ix = 0, j;
 	for (j = 0; j < (length); ++j)
@@ -419,6 +466,7 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 		printf("%s\n", "values imputed.");
 	}
 	free(pairs);
+	pairs = NULL;
 }
 
 
@@ -426,7 +474,7 @@ void knn(int idx, point *Data, int *points, int length, int n, int k, int *iz, i
 void seek(double *a, int n, int k, int *iz, int verbose) 
 {
 	point *Data;
-	Data = malloc(n * sizeof(point));
+	Data = (point*) malloc(n * sizeof(point));
 	arr_to_points(a, Data, n);
 	// getchar();
 	// print_point(Data[0]);
@@ -443,7 +491,8 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 	}
 
 	control_object *Control;
-	Control = malloc(BUF * sizeof (control_object));
+	Control = (control_object*) malloc(BUF * sizeof (control_object));
+	// control_object Control[BUF];
 	
 	Control[0].is_processed = 0, Control[0].start = 0, Control[0].end = (n - 1);
 	Control[0].parent = -8, 
@@ -504,7 +553,7 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 		C.center = Data[i];
 		C.radius = get_radius(Data[i], Control[parent_idx].Box);
 
-		int points[BUF];
+		int points[n];
 		int to_consider[n];
 		for (j = 0; j < n; ++j)
 		{	
@@ -578,8 +627,11 @@ void seek(double *a, int n, int k, int *iz, int verbose)
 
 	}
 	free(Data);
+	Data = NULL;
 	free(permutation);
-	free(Control);
+	permutation = NULL;
+	// free(Control);
+	// Control = NULL;
 }
 
 
@@ -598,18 +650,117 @@ void print_matrix(double *a, int row, int col)
 	}
 	return;
 }
+//----------------------------------------------------------------------------
+typedef struct perf_t
+{
+	int n;
+	int k;
+	int passed;
+	double fast_time;
+	double naive_time;
+} perf_t;
+//----------------------------------------------------------------------------
+
+void print_perf_array(perf_t *perf, int n)
+{
+	int i;
+	printf("N, k, Passed, Fast.time, Naive.time\n");
+	for (i = 0; i < n; ++i)
+	{
+		printf("%d, %d, %d, %f, %f\n", perf[i].n, 
+			                           perf[i].k, 
+			                           perf[i].passed, 
+			                           perf[i].fast_time, 
+			                           perf[i].naive_time);
+	}
+}
+//----------------------------------------------------------------------------
+void print_perf(perf_t perf)
+{
+	printf("%d, %d, %d, %f, %f\n", perf.n, 
+		                           perf.k, 
+		                           perf.passed, 
+		                           perf.fast_time, 
+		                           perf.naive_time);
+
+}
+
+//----------------------------------------------------------------------------
+perf_t test(int n, int k)
+{
+	int i, j, *iz, *iz2, t1, t2, t3, ok = 1;
+	
+	double *a;
+	a = (double*) malloc(2 * n * sizeof(double));
+	iz = (int*) malloc(n * k * sizeof(int));
+	iz2 = (int*) malloc(n * k * sizeof(int));
+	// srand((unsigned)time(NULL));
+	
+	for (i = 0; i < n; ++i)
+	{
+		for (j = 0; j < 2; ++j)
+		{
+			a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
+		}
+	}
+	t1 = clock();
+	seek_naive(a, n, k, iz);
+	// print_matrix(a, n, 2);
+	t2 = clock();
+	seek(a, n, k, iz2, 0);
+	// printf("\n\n\n\n\n");
+	// print_matrix(a, n, 2);
+	t3 = clock();
+	for (i = 0; i < n; ++i)
+	{
+		for (j = 0; j < k; ++j)
+		{
+			if (iz[i * k + j] != iz2[i * k + j])
+			{
+				ok = 0;
+				// printf("Diff: (%d, %d) = %d, %d\n", i, j, iz[i * k + j], iz2[i * k + j]);
+				// break;
+			}
+		}
+	}
+	free(a);
+	a = NULL;
+	free(iz);
+	iz = NULL;
+	free(iz2);
+	iz2 = NULL;
+
+	perf_t _tmp = {.n = n, .k = k, .passed = ok, 
+		.fast_time = (double)(t3-t2)/(double)CLOCKS_PER_SEC, 
+		.naive_time = (double)(t2-t1)/(double)CLOCKS_PER_SEC};
+	return _tmp;
+
+}
 
 //----------------------------------------------------------------------------
 
 int main(int argc, char const *argv[])
 {
+	// int i;
+	// int n = atoi(argv[1]);
+	// int m = atoi(argv[2]);
+	// for (i = n; i < m; i++)
+	// {
+	// perf_t f = test(13, 3);
+	// perf_t t = test(13, 3);
+	// print_perf(t);
+	
+	// print_perf(f);
+	// }
+
 	int n = atoi(argv[1]), i, j, k = atoi(argv[2]), *iz, *iz2;
+	srand(2342342341);
 	double *a, *D;
 	a = malloc(2 * n * sizeof(double));
-	D = malloc(n * n * sizeof(double));
 	iz = malloc(n * k * sizeof(int));
 	iz2 = malloc(n * k * sizeof(int));
-	srand (99);
+	// // srand (99);
+	// srand((unsigned)time(NULL));
 
 
 	for (i = 0; i < n; ++i)
@@ -620,53 +771,52 @@ int main(int argc, char const *argv[])
 		}
 	}
 
-	// a[0] = .15, a[1] = .15;
-	// a[2] = .15, a[3] = .4;
-	// a[4] = .15, a[5] = .65;
-	// a[6] = .4, a[7] = .15;
-	// a[8] = .4, a[9] = .4;
-	// a[10] = .4, a[11] = .65;
-	// a[12] = .65, a[13] = .15;
-	// a[14] = .65, a[15] = .4;
-	// a[16] = .65, a[17] = .65;
 
 	
-	dist_matrix(D, a, n);
 	// print_matrix(a, n, 2);
-	printf("naive seek:\n");
+	// getchar();
+	// printf("naive seek:\n");
 
 	seek_naive(a, n, k, iz);
 	// print_int_matrix(iz, n, k);
-	printf("good seek:\n");
+	// printf("good seek:\n");
+	// printf("Theirs:\n");
+	// _seek(a, n, k, iz2);
+	// printf("Mine:\n");
 	seek(a, n, k, iz2, 0);
 	// print_int_matrix(iz2, n, k);
 	int ctr = 0;
+	int ok = 1;
+	int bad = 0;
 	for (i = 0; i < n; ++i)
 	{
-		int ok = 1;
+		ok = 1;
 		ctr = 0;
 		for (j = 0; j < k; ++j)
 		{
 			if (iz[i * k + j] != iz2[i * k + j])
 			{
 				ok = 0;
+				bad = 1;
 				++ctr;
 			}
 		}
-		if (!ok)
+		if (ok == 0)
 		{
 			printf("row %d, %d elements not ok.\n", i, ctr);
 		}
 	}
 	// print_matrix(a, n, 2);
+	printf("%d, %d, %d\n", n, k, !bad);
 	free(a);
-	free(D);
+	a = NULL;
 	free(iz);
+	iz = NULL;
 	free(iz2);
+	iz2 = NULL;
 
-
-
-
+	// perf_t t = test(n, k);
+	// print_perf(t);
 
 
 
