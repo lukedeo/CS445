@@ -121,15 +121,27 @@ int main(int argc, char const *argv[])
 
 	perf_t t;
 	int n = atoi(argv[1]), k = atoi(argv[2]);
-	// for (n = 10; n <= 1000; n+=10)
+	// for (n = 10; n <= 20; n+=2)
 	// {
 	// 	for (k = 1; k <= 2; ++k)
 	// 	{
-	// 		t = test(n, k);
+	// 		perf_t t = test(n, k);
 	// 		print_perf(t);
 	// 	}
 	// }
+
 	t = test(n, k);
+	print_perf(t);
+	t = test(n+k, k);
+	print_perf(t);
+	t = test(n+k+1, k+1
+		);
+	print_perf(t);
+	t = test((n++)+k, k++);
+	print_perf(t);
+	t = test((n++)+k, k++);
+	print_perf(t);
+	t = test((n++)+k, k++);
 	print_perf(t);
 
 
@@ -281,6 +293,7 @@ perf_t test(int n, int k)
 			a[i * 2 + j] = ((double)rand()/(double)RAND_MAX);
 		}
 	}
+
 	t1 = clock();
 	seek_naive(a, n, k, iz);
 	t2 = clock();
@@ -336,6 +349,16 @@ void naive_knn(int idx, point *Data, int n, int k, int *iz)
 //----------------------------------------------------------------------------
 void seek_naive(double *a, int n, int k, int *iz)
 {
+	if (k >= n)
+	{
+		printf("Error: k cannot be greater than n.\n");
+		return;
+	}
+	if (k == 0)
+	{
+		printf("Error: k cannot be zero.\n");
+		return;
+	}
 	int i;
 	point *Data;
 	Data = (point*) malloc(n * sizeof(point));
@@ -500,6 +523,7 @@ void knn(int idx, point *Data, int points[], int length, int n, int k, int *iz)
 {
 	pair* pairs;
 	pairs = (pair*)malloc((length - 1) * sizeof(pair));
+
 	int ix = 0, j;
 	for (j = 0; j < (length); ++j)
 	{
@@ -522,19 +546,39 @@ void knn(int idx, point *Data, int points[], int length, int n, int k, int *iz)
 //----------------------------------------------------------------------------
 void seek(double *a, int n, int k, int *iz) 
 {
+	if (k >= n)
+	{
+		printf("Error: k cannot be greater than n.\n");
+		return;
+	}
+	if (k == 0)
+	{
+		printf("Error: k cannot be zero.\n");
+		return;
+	}
 	point *Data;
 	Data = (point*) malloc(n * sizeof(point));
 	arr_to_points(a, Data, n);
 	int i, j, l;
-	int *permutation = (int*) malloc(n * sizeof(int));
+	int *permutation;
+	permutation = (int*) malloc(n * sizeof(int));
 	for (i = 0; i < n; i++)
 	{
 		permutation[i] = i;
 	}
 
-	control_object *Control;
+	control_object *Control;	
 	Control = (control_object*) malloc(BUFFER * sizeof (control_object));
-	
+
+	for (i = 0; i < BUFFER; ++i)
+	{
+		for (j = 0; j < 4; ++j)
+		{
+			Control[i].children[j] = 0;
+		}
+		Control[i].is_processed = 0;
+	}
+
 	Control[0].is_processed = 0, Control[0].start = 0, Control[0].end = (n-1);
 	Control[0].parent = -8, 
 	Control[0].Box.b_left.x = 0, Control[0].Box.b_left.y = 0;
@@ -542,15 +586,14 @@ void seek(double *a, int n, int k, int *iz)
 	Control[0].Box.t_right.x = 1, Control[0].Box.t_right.y = 1;
 	Control[0].Box.b_right.x = 1, Control[0].Box.b_right.y = 0;
 
+
 	int current = 0;
 	int next = 1;
-
 	while(current < next)
 	{
 		int end = Control[current].end;
 		int start = Control[current].start;
-
-		if (((end - start + 1) > k)) // more than k points at this node.
+		if (((end - start + 1) > k) && (Control[current].is_processed == 0)) // more than k points at this node.
 		{	
 			add_control_entry(Control, permutation, current, next, Data, n);
 			next += 4;
@@ -599,13 +642,14 @@ void seek(double *a, int n, int k, int *iz)
 			}
 		}
 		knn(i, Data, points, length, n, k, iz);
-
 	}
+	free(Control);
+	Control = NULL;
 	free(Data);
 	Data = NULL;
 	free(permutation);
 	permutation = NULL;
-	// free(Control);
-	// Control = NULL;
+	
+	
 }
 //----------------------------------------------------------------------------
