@@ -121,28 +121,28 @@ int main(int argc, char const *argv[])
 
 	perf_t t;
 	int n = atoi(argv[1]), k = atoi(argv[2]);
-	// for (n = 10; n <= 20; n+=2)
+	// for (n = 500; n <= 100000; n+=500)
 	// {
-	// 	for (k = 1; k <= 2; ++k)
-	// 	{
-	// 		perf_t t = test(n, k);
+	// 	// for (k = 1; k <= 5; ++k)
+	// 	// {
+	// 		perf_t t = test(n, 110);
 	// 		print_perf(t);
-	// 	}
+	// 	// }
 	// }
 
 	t = test(n, k);
 	print_perf(t);
-	t = test(n+k, k);
-	print_perf(t);
-	t = test(n+k+1, k+1
-		);
-	print_perf(t);
-	t = test((n++)+k, k++);
-	print_perf(t);
-	t = test((n++)+k, k++);
-	print_perf(t);
-	t = test((n++)+k, k++);
-	print_perf(t);
+	// t = test(n+k, k);
+	// print_perf(t);
+	// t = test(n+k+1, k+1
+	// 	);
+	// print_perf(t);
+	// t = test((n++)+k, k++);
+	// print_perf(t);
+	// t = test((n++)+k, k++);
+	// print_perf(t);
+	// t = test((n++)+k, k++);
+	// print_perf(t);
 
 
 	return 0;
